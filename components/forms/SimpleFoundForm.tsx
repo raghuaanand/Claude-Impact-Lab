@@ -324,6 +324,36 @@ export default function SimpleFoundForm({ language }: { language: string }) {
               ))}
             </div>
           )}
+
+          {/* Voice Input Button */}
+          {voiceSupported && (currentStep.type === 'text' || currentStep.type === 'textarea') && (
+            <div className="mt-4">
+              {!isRecording ? (
+                <button
+                  type="button"
+                  onClick={handleStartVoice}
+                  className="w-full rounded-2xl bg-blue-500 px-6 py-4 text-2xl font-bold text-white hover:bg-blue-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  🎤 Tap to speak
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleStopVoice}
+                  className="w-full rounded-2xl bg-red-500 px-6 py-4 text-2xl font-bold text-white hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2 animate-pulse"
+                >
+                  ⏹️ Stop ({recordingTime}s)
+                </button>
+              )}
+
+              {voiceTranscript && (
+                <div className="mt-3 rounded-xl bg-blue-50 p-3 text-lg text-blue-900">
+                  <p className="text-xs text-blue-700 mb-1">You said:</p>
+                  <p className="font-semibold">{voiceTranscript}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

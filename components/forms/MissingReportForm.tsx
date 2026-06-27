@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { getVoiceInputManager } from '@/lib/voice-input';
 
 interface ImageFile {
   id: string;
@@ -15,6 +16,24 @@ export default function MissingReportForm() {
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageFile[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const voiceManagerRef = useRef<any>(null);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [recordingFieldId, setRecordingFieldId] = useState<string | null>(null);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+
+  useEffect(() => {
+    const mgr = getVoiceInputManager('en-IN');
+    setVoiceSupported(mgr.isSupported());
+    voiceManagerRef.current = mgr;
+
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const [formData, setFormData] = useState({
     personName: '',
@@ -97,6 +116,66 @@ export default function MissingReportForm() {
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
+  const handleStartVoice = (fieldId: string) => {
+    if (!voiceManagerRef.current || !voiceSupported) return;
+
+    setRecordingFieldId(fieldId);
+    setVoiceTranscript('');
+    setRecordingTime(0);
+
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+
+    voiceManagerRef.current.start((result: any) => {
+      setVoiceTranscript(result.text);
+      if (result.isFinal) {
+        addTextToField(fieldId, result.text);
+      }
+    });
+  };
+
+  const handleStopVoice = () => {
+    if (!voiceManagerRef.current) return;
+
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+    }
+
+    const finalText = voiceManagerRef.current.stop();
+    if (finalText && recordingFieldId) {
+      addTextToField(recordingFieldId, finalText);
+    }
+    setRecordingFieldId(null);
+  };
+
+  const addTextToField = (fieldId: string, text: string) => {
+    if (fieldId === 'personName') {
+      setFormData((prev) => ({ ...prev, personName: text }));
+    } else if (fieldId === 'description') {
+      setFormData((prev) => ({ ...prev, description: text }));
+    } else if (fieldId === 'contactName') {
+      setFormData((prev) => ({ ...prev, contactName: text }));
+    } else if (fieldId === 'contactPhone') {
+      setFormData((prev) => ({ ...prev, contactPhone: text }));
+    } else if (fieldId === 'address') {
+      setFormData((prev) => ({
+        ...prev,
+        location: { ...prev.location, address: text },
+      }));
+    } else if (fieldId === 'city') {
+      setFormData((prev) => ({
+        ...prev,
+        location: { ...prev.location, city: text },
+      }));
+    } else if (fieldId === 'state') {
+      setFormData((prev) => ({
+        ...prev,
+        location: { ...prev.location, state: text },
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -167,15 +246,40 @@ export default function MissingReportForm() {
           <label className="block text-sm font-medium text-khummela-text">
             Name <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            name="personName"
-            value={formData.personName}
-            onChange={handleInputChange}
-            placeholder="Full name of missing person"
-            className="mt-1 w-full rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
-            required
-          />
+          <div className="flex gap-2 mt-1">
+            <input
+              type="text"
+              name="personName"
+              value={formData.personName}
+              onChange={handleInputChange}
+              placeholder="Full name of missing person"
+              className="flex-1 rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
+              required
+            />
+            {voiceSupported && (
+              <button
+                type="button"
+                onClick={() =>
+                  recordingFieldId === 'personName'
+                    ? handleStopVoice()
+                    : handleStartVoice('personName')
+                }
+                className={`px-4 py-2 rounded-lg font-medium transition-all active:scale-95 ${
+                  recordingFieldId === 'personName'
+                    ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+                title="Click to use voice input"
+              >
+                {recordingFieldId === 'personName' ? '⏹️' : '🎤'}
+              </button>
+            )}
+          </div>
+          {recordingFieldId === 'personName' && voiceTranscript && (
+            <div className="mt-2 rounded-lg bg-blue-50 p-2 text-sm text-blue-900">
+              <strong>Hearing:</strong> {voiceTranscript}
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -211,14 +315,39 @@ export default function MissingReportForm() {
 
         <div>
           <label className="block text-sm font-medium text-khummela-text">Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            placeholder="Physical description, clothing, distinguishing features, etc."
-            rows={4}
-            className="mt-1 w-full rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
-          />
+          <div className="flex gap-2 mt-1">
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Physical description, clothing, distinguishing features, etc."
+              rows={4}
+              className="flex-1 rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
+            />
+            {voiceSupported && (
+              <button
+                type="button"
+                onClick={() =>
+                  recordingFieldId === 'description'
+                    ? handleStopVoice()
+                    : handleStartVoice('description')
+                }
+                className={`px-4 py-2 rounded-lg font-medium transition-all active:scale-95 h-fit ${
+                  recordingFieldId === 'description'
+                    ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+                title="Click to use voice input"
+              >
+                {recordingFieldId === 'description' ? '⏹️' : '🎤'}
+              </button>
+            )}
+          </div>
+          {recordingFieldId === 'description' && voiceTranscript && (
+            <div className="mt-2 rounded-lg bg-blue-50 p-2 text-sm text-blue-900">
+              <strong>Hearing:</strong> {voiceTranscript}
+            </div>
+          )}
         </div>
 
         <div>
@@ -294,27 +423,77 @@ export default function MissingReportForm() {
 
         <div>
           <label className="block text-sm font-medium text-khummela-text">Contact Name</label>
-          <input
-            type="text"
-            name="contactName"
-            value={formData.contactName}
-            onChange={handleInputChange}
-            placeholder="Name of person reporting"
-            className="mt-1 w-full rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
-          />
+          <div className="flex gap-2 mt-1">
+            <input
+              type="text"
+              name="contactName"
+              value={formData.contactName}
+              onChange={handleInputChange}
+              placeholder="Name of person reporting"
+              className="flex-1 rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
+            />
+            {voiceSupported && (
+              <button
+                type="button"
+                onClick={() =>
+                  recordingFieldId === 'contactName'
+                    ? handleStopVoice()
+                    : handleStartVoice('contactName')
+                }
+                className={`px-4 py-2 rounded-lg font-medium transition-all active:scale-95 ${
+                  recordingFieldId === 'contactName'
+                    ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+                title="Click to use voice input"
+              >
+                {recordingFieldId === 'contactName' ? '⏹️' : '🎤'}
+              </button>
+            )}
+          </div>
+          {recordingFieldId === 'contactName' && voiceTranscript && (
+            <div className="mt-2 rounded-lg bg-blue-50 p-2 text-sm text-blue-900">
+              <strong>Hearing:</strong> {voiceTranscript}
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-khummela-text">Phone</label>
-            <input
-              type="tel"
-              name="contactPhone"
-              value={formData.contactPhone}
-              onChange={handleInputChange}
-              placeholder="Phone number"
-              className="mt-1 w-full rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
-            />
+            <div className="flex gap-2 mt-1">
+              <input
+                type="tel"
+                name="contactPhone"
+                value={formData.contactPhone}
+                onChange={handleInputChange}
+                placeholder="Phone number"
+                className="flex-1 rounded-lg border border-khummela-border px-4 py-2 text-khummela-text placeholder-khummela-muted focus:border-khummela-primary focus:outline-none"
+              />
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    recordingFieldId === 'contactPhone'
+                      ? handleStopVoice()
+                      : handleStartVoice('contactPhone')
+                  }
+                  className={`px-4 py-2 rounded-lg font-medium transition-all active:scale-95 ${
+                    recordingFieldId === 'contactPhone'
+                      ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                  title="Click to use voice input"
+                >
+                  {recordingFieldId === 'contactPhone' ? '⏹️' : '🎤'}
+                </button>
+              )}
+            </div>
+            {recordingFieldId === 'contactPhone' && voiceTranscript && (
+              <div className="mt-2 rounded-lg bg-blue-50 p-2 text-sm text-blue-900">
+                <strong>Hearing:</strong> {voiceTranscript}
+              </div>
+            )}
           </div>
 
           <div>
