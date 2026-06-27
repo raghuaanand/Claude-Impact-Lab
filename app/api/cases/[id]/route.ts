@@ -28,8 +28,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const authResult = await requireAuth();
   if ("error" in authResult) return authResult.error;
   const { session } = authResult;
+  const role = session.user.role;
 
-  if (!["SUPERVISOR", "POLICE", "VOLUNTEER"].includes(session.user.role)) {
+  if (!["SUPERVISOR", "POLICE", "VOLUNTEER"].includes(role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -46,11 +47,31 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  if (
+    parsed.data.status === "RESOLVED" &&
+    !["SUPERVISOR", "POLICE"].includes(role)
+  ) {
+    return NextResponse.json(
+      { error: "Only supervisors can resolve cases" },
+      { status: 403 }
+    );
+  }
+
+  const updateData = { ...parsed.data };
+  if (parsed.data.status === "RESOLVED") {
+    const existing = await prisma.case.findUnique({ where: { id } });
+    if (existing && !existing.resolutionHours) {
+      const hours =
+        (Date.now() - existing.reportedAt.getTime()) / (1000 * 60 * 60);
+      Object.assign(updateData, { resolutionHours: hours });
+    }
+  }
+
   const updated = await prisma.case.update({
     where: { id },
-    data: parsed.data,
+    data: updateData,
     include: { zone: true, media: true },
   });
 
-  return NextResponse.json({ case: redactCase(updated, session.user.role) });
+  return NextResponse.json({ case: redactCase(updated, role) });
 }

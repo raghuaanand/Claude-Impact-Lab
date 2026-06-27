@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MobileShell } from "@/components/layout/MobileShell";
+import { useSession } from "next-auth/react";
+import { AppShell } from "@/components/layout/MobileShell";
 import { StatCard } from "@/components/ui/StatCard";
 import { CaseCard } from "@/components/ui/CaseCard";
 import { MatchCompare } from "@/components/ui/MatchCompare";
@@ -27,6 +28,8 @@ type MatchRow = {
 };
 
 export default function ManagementPage() {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [cases, setCases] = useState<SafeCase[]>([]);
@@ -56,7 +59,7 @@ export default function ManagementPage() {
   }
 
   return (
-    <MobileShell title="Command Center">
+    <AppShell title="Command Center" role={role} showNav={false}>
       <div className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-3xl font-semibold tracking-tight">Command Center</h1>
         <p className="mt-1 text-khummela-muted">Supervisor overview — all zones</p>
@@ -168,6 +171,6 @@ export default function ManagementPage() {
           </Link>
         </p>
       </div>
-    </MobileShell>
+    </AppShell>
   );
 }
