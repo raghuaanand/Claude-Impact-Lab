@@ -99,18 +99,57 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     },
   });
 
-  // If confirmed, update report statuses to RESOLVED and schedule PII deletion
+  // If confirmed, update report statuses to RESOLVED and delete PII
   if (newStatus === "CONFIRMED") {
+    // Delete associated images first
+    await Promise.all([
+      prisma.reportImage.deleteMany({
+        where: { missingReportId: suggestion.missingReportId },
+      }),
+      prisma.reportImage.deleteMany({
+        where: { foundReportId: suggestion.foundReportId },
+      }),
+    ]);
+
+    // Mark reports as RESOLVED and delete PII
     await Promise.all([
       prisma.missingReport.update({
         where: { id: suggestion.missingReportId },
-        data: { status: "RESOLVED" },
+        data: {
+          status: "RESOLVED",
+          // Delete PII but keep case structure for audit
+          contactName: null,
+          contactPhone: null,
+          contactEmail: null,
+        },
       }),
       prisma.foundReport.update({
         where: { id: suggestion.foundReportId },
-        data: { status: "RESOLVED" },
+        data: {
+          status: "RESOLVED",
+          contactName: null,
+          contactPhone: null,
+          contactEmail: null,
+        },
       }),
     ]);
+
+    // Log PII deletion
+    await createAuditLog({
+      userId: user.id,
+      action: "UPDATED",
+      entityType: "MISSING_REPORT",
+      entityId: suggestion.missingReportId,
+      metadata: { piiDeleted: true, reason: "Case confirmed and resolved" },
+    });
+
+    await createAuditLog({
+      userId: user.id,
+      action: "UPDATED",
+      entityType: "FOUND_REPORT",
+      entityId: suggestion.foundReportId,
+      metadata: { piiDeleted: true, reason: "Case confirmed and resolved" },
+    });
   }
 
   // Audit log
