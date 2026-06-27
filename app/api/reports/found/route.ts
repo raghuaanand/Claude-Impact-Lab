@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthorizedUser } from "@/lib/api-auth";
+import { createAuditLog } from "@/lib/audit";
 import type { Gender } from "@/app/generated/prisma/client";
 
 const GENDERS = new Set<string>(["MALE", "FEMALE", "OTHER", "UNKNOWN"]);
@@ -63,6 +64,14 @@ export async function POST(request: NextRequest) {
       contactEmail: typeof b.contactEmail === "string" ? b.contactEmail.trim() : null,
     },
     include: { location: true },
+  });
+
+  await createAuditLog({
+    userId: user.id,
+    action: "CREATED",
+    entityType: "FOUND_REPORT",
+    entityId: report.id,
+    foundReportId: report.id,
   });
 
   return NextResponse.json({ data: { ...report, reportType: "found" } }, { status: 201 });

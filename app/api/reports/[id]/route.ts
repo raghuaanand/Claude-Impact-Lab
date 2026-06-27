@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthorizedUser } from "@/lib/api-auth";
+import { createAuditLog } from "@/lib/audit";
 import type { Gender, ReportStatus } from "@/app/generated/prisma/client";
 
 const GENDERS = new Set<string>(["MALE", "FEMALE", "OTHER", "UNKNOWN"]);
@@ -149,6 +150,21 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     });
   }
 
+  const auditAction = b.status !== undefined ? "STATUS_CHANGED" : "UPDATED";
+  const auditMeta =
+    auditAction === "STATUS_CHANGED"
+      ? { from: report.status, to: b.status }
+      : { fields: Object.keys(b) };
+
+  await createAuditLog({
+    userId: user.id,
+    action: auditAction,
+    entityType: reportType === "missing" ? "MISSING_REPORT" : "FOUND_REPORT",
+    entityId: id,
+    ...(reportType === "missing" ? { missingReportId: id } : { foundReportId: id }),
+    metadata: auditMeta,
+  });
+
   return NextResponse.json({ data: { ...updated, reportType } });
 }
 
@@ -166,7 +182,19 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Report not found" }, { status: 404 });
   }
 
-  if (result.reportType === "missing") {
+  const { reportType } = result;
+
+  // Write audit log before deletion so FK references are still valid.
+  await createAuditLog({
+    userId: user.id,
+    action: "DELETED",
+    entityType: reportType === "missing" ? "MISSING_REPORT" : "FOUND_REPORT",
+    entityId: id,
+    ...(reportType === "missing" ? { missingReportId: id } : { foundReportId: id }),
+    metadata: { reportType },
+  });
+
+  if (reportType === "missing") {
     await prisma.missingReport.delete({ where: { id } });
   } else {
     await prisma.foundReport.delete({ where: { id } });
