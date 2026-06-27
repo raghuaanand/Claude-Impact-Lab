@@ -8,8 +8,45 @@ datasource db {
 }
 
 enum Role {
-  USER
-  MANAGEMENT
+  FAMILY
+  VOLUNTEER
+  SUPERVISOR
+  POLICE
+}
+
+enum CaseType {
+  MISSING
+  FOUND
+}
+
+enum CaseStatus {
+  OPEN
+  MATCH_PENDING
+  RESOLVED
+  TRANSFERRED
+  UNRESOLVED
+  DUPLICATE
+}
+
+enum MatchStatus {
+  SUGGESTED
+  APPROVED
+  REJECTED
+}
+
+enum MediaKind {
+  PHOTO
+  VIDEO
+  AUDIO
+}
+
+enum MelaLocationCategory {
+  TRAFFIC_CHOKE
+  NO_VEHICLE_ZONE
+  TRANSFER_NODE
+  PARKING
+  OUTER_PARKING
+  PARKING_BELT
 }
 
 model User {
@@ -21,13 +58,18 @@ model User {
   mobileVerified DateTime?
   password       String?
   image          String?
-  role           Role      @default(USER)
+  role           Role      @default(VOLUNTEER)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
-  otpCodes OtpCode[]
+  accounts            Account[]
+  sessions            Session[]
+  otpCodes            OtpCode[]
+  volunteerAssignment VolunteerAssignment?
+  reviewedMatches     Match[]              @relation("MatchReviewer")
+  reunifications      Reunification[]
+  auditLogs           AuditLog[]
+  reportedCases       Case[]               @relation("CaseReporter")
 }
 
 model Account {
@@ -77,4 +119,153 @@ model OtpCode {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([mobile, purpose])
+}
+
+model Zone {
+  id                  String   @id @default(cuid())
+  code                String   @unique
+  name                String
+  centroidLat         Float
+  centroidLng         Float
+  boundaryPointCount  Int?
+  createdAt           DateTime @default(now())
+
+  cctvLocations CctvLocation[]
+  cases         Case[]
+  assignments   VolunteerAssignment[]
+}
+
+model CctvLocation {
+  id       String @id @default(cuid())
+  cameraId String @unique
+  lat      Float
+  lng      Float
+  zoneId   String
+  zone     Zone   @relation(fields: [zoneId], references: [id])
+
+  @@index([zoneId])
+}
+
+model PoliceStation {
+  id   String @id @default(cuid())
+  name String @unique
+  lat  Float
+  lng  Float
+}
+
+model MelaLocation {
+  id       String               @id @default(cuid())
+  name     String
+  category MelaLocationCategory
+  lat      Float
+  lng      Float
+
+  @@unique([name, category])
+  @@index([category])
+}
+
+model Case {
+  id                  String     @id @default(cuid())
+  caseRef             String     @unique
+  type                CaseType
+  status              CaseStatus @default(OPEN)
+  zoneId              String?
+  zone                Zone?      @relation(fields: [zoneId], references: [id])
+  personName          String?
+  ageBand             String?
+  gender              String?
+  language            String?
+  state               String?
+  district            String?
+  physicalDescription String?
+  lastSeenText        String?
+  lastSeenAt          DateTime?
+  reportingCenter     String?
+  reporterPhone       String?
+  isDuplicate         Boolean    @default(false)
+  duplicateOfId       String?
+  duplicateOf         Case?      @relation("CaseDuplicates", fields: [duplicateOfId], references: [id])
+  duplicates          Case[]     @relation("CaseDuplicates")
+  resolutionHours     Float?
+  remarks             String?
+  reportedAt          DateTime   @default(now())
+  reporterId          String?
+  reporter            User?      @relation("CaseReporter", fields: [reporterId], references: [id])
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  media              CaseMedia[]
+  missingMatches     Match[]         @relation("MissingCase")
+  foundMatches       Match[]         @relation("FoundCase")
+  reunifications     Reunification[]
+
+  @@index([type, status, zoneId])
+  @@index([reportingCenter])
+  @@index([status])
+  @@index([personName])
+}
+
+model CaseMedia {
+  id        String    @id @default(cuid())
+  caseId    String
+  case      Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  s3Key     String
+  cdnUrl    String
+  mimeType  String
+  kind      MediaKind @default(PHOTO)
+  createdAt DateTime  @default(now())
+
+  @@index([caseId])
+}
+
+model Match {
+  id             String      @id @default(cuid())
+  missingCaseId  String
+  foundCaseId    String
+  missingCase    Case        @relation("MissingCase", fields: [missingCaseId], references: [id], onDelete: Cascade)
+  foundCase      Case        @relation("FoundCase", fields: [foundCaseId], references: [id], onDelete: Cascade)
+  score          Int
+  status         MatchStatus @default(SUGGESTED)
+  reviewedById   String?
+  reviewedBy     User?       @relation("MatchReviewer", fields: [reviewedById], references: [id])
+  reviewedAt     DateTime?
+  createdAt      DateTime    @default(now())
+
+  reunifications Reunification[]
+
+  @@unique([missingCaseId, foundCaseId])
+  @@index([status])
+}
+
+model Reunification {
+  id           String   @id @default(cuid())
+  caseId       String
+  case         Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  matchId      String?
+  match        Match?   @relation(fields: [matchId], references: [id])
+  verifiedById String
+  verifiedBy   User     @relation(fields: [verifiedById], references: [id])
+  resolvedAt   DateTime @default(now())
+  notes        String?
+}
+
+model VolunteerAssignment {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zoneId String
+  zone   Zone   @relation(fields: [zoneId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
 }

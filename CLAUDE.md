@@ -116,3 +116,5 @@ Project-specific agent skills live in `skills/`:
 ## Post-Setup
 
 After code changes involving auth or database, refer to `docs/AUTH_SETUP.md` for environment configuration steps.
+
+For production deployment on AWS EC2 with Supabase, PM2, and HTTPS, see `docs/DEPLOYMENT_EC2.md`.

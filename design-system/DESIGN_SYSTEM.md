@@ -107,6 +107,14 @@ Split layout for sign-in/sign-up:
 - Avoid: "Urgent!", sensational language, fear-based messaging
 - Prefer: hope, community, reunion, coordination
 
+## Premium UI tier (Sangam Connect)
+
+- One primary CTA per screen; 48px minimum touch targets (`h-12`)
+- Cards: `rounded-2xl bg-white shadow-sm ring-1 ring-black/5`
+- Use extended components: `Card`, `Badge`, `StatCard`, `CaseCard`, `StepWizard`, `SearchBar`, `PhotoUpload`, `MatchCompare`, `BottomNav`
+- Skeleton loaders for async lists; designed `EmptyState` for zero results
+- Motion: 200–300ms ease-out; respect `prefers-reduced-motion`
+
 ## File Organization
 
 ```

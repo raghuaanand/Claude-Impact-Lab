@@ -68,5 +68,6 @@ Missing persons identification platform — helping communities identify and loc
 ## Documentation
 
 - [Authentication Setup Guide](docs/AUTH_SETUP.md) — Google, OTP, database, env vars
+- [EC2 Deployment Guide](docs/DEPLOYMENT_EC2.md) — Supabase, PM2, Elastic IP, HTTPS
 - [Design System](design-system/DESIGN_SYSTEM.md) — Colors, typography, components
 - [CLAUDE.md](CLAUDE.md) — AI agent conventions

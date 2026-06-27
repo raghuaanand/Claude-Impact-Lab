@@ -126,4 +126,5 @@ Auth UI must follow `design-system/DESIGN_SYSTEM.md` — use `components/ui/` an
 
 ## Setup Reference
 
-For Google OAuth, Twilio SMS, database, and `AUTH_SECRET` configuration, see `docs/AUTH_SETUP.md`.
+- Local auth setup (Google, Twilio, `AUTH_SECRET`): `docs/AUTH_SETUP.md`
+- Production EC2 deploy (Supabase, PM2, HTTPS): `docs/DEPLOYMENT_EC2.md`
