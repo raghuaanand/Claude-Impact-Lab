@@ -1,79 +1,96 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { SignOutButton } from "@/components/auth/SignOutButton";
+import { MobileShell } from "@/components/layout/MobileShell";
+import { BottomNav } from "@/components/ui/BottomNav";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { CaseCard } from "@/components/ui/CaseCard";
+import { CaseCardSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Card } from "@/components/ui/Card";
+import { Users, UserPlus } from "lucide-react";
+import type { SafeCase } from "@/lib/case-access";
 
-export default async function DashboardPage() {
-  const session = await auth();
+export default function DashboardPage() {
+  const [cases, setCases] = useState<SafeCase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
-  if (!session?.user) {
-    redirect("/signin");
-  }
+  const load = useCallback(async (q: string) => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    const res = await fetch(`/api/cases?${params}`);
+    const data = await res.json();
+    setCases(data.cases ?? []);
+    setLoading(false);
+  }, []);
 
-  const isManagement = session.user.role === "MANAGEMENT";
+  useEffect(() => {
+    const t = setTimeout(() => load(query), 300);
+    return () => clearTimeout(t);
+  }, [query, load]);
 
   return (
-    <div className="min-h-full bg-khummela-bg">
-      <header className="border-b border-khummela-border bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-khummela-primary font-bold text-white text-sm">
-              K
-            </div>
-            <span className="font-semibold text-khummela-text">KHUMMELA</span>
+    <MobileShell managementLink>
+      <div className="mx-auto max-w-lg px-4 py-6 lg:max-w-6xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-khummela-text">
+          Volunteer dashboard
+        </h1>
+        <p className="mt-1 text-sm text-khummela-muted">
+          Cross-center search — every case, every zone
+        </p>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <Link href="/report/missing">
+            <Card className="flex h-24 items-center gap-4 p-4 transition-shadow hover:shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-khummela-primary/10 text-khummela-primary">
+                <UserPlus className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-semibold">Report Missing</p>
+                <p className="text-xs text-khummela-muted">New missing person</p>
+              </div>
+            </Card>
           </Link>
-          <div className="flex items-center gap-4">
-            {isManagement && (
-              <Link
-                href="/management"
-                className="text-sm font-medium text-khummela-primary hover:text-khummela-primary-dark"
-              >
-                Management
-              </Link>
-            )}
-            <SignOutButton />
-          </div>
+          <Link href="/report/found">
+            <Card className="flex h-24 items-center gap-4 p-4 transition-shadow hover:shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-khummela-accent/10 text-khummela-accent">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-semibold">Report Found</p>
+                <p className="text-xs text-khummela-muted">Register & match</p>
+              </div>
+            </Card>
+          </Link>
         </div>
-      </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="rounded-2xl border border-khummela-border bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-bold text-khummela-text">
-            Welcome, {session.user.name || session.user.email || "Volunteer"}
-          </h1>
-          <p className="mt-2 text-khummela-muted">
-            You are signed in as{" "}
-            <span className="font-medium text-khummela-text">
-              {session.user.role === "MANAGEMENT" ? "Management" : "Volunteer"}
-            </span>
-          </p>
+        <SearchBar className="mt-6" value={query} onChange={setQuery} />
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl bg-khummela-surface p-6">
-              <p className="text-sm font-medium text-khummela-muted">Status</p>
-              <p className="mt-1 text-lg font-semibold text-khummela-success">
-                Active
-              </p>
-            </div>
-            <div className="rounded-xl bg-khummela-surface p-6">
-              <p className="text-sm font-medium text-khummela-muted">Role</p>
-              <p className="mt-1 text-lg font-semibold text-khummela-text">
-                {session.user.role}
-              </p>
-            </div>
-            <div className="rounded-xl bg-khummela-surface p-6">
-              <p className="text-sm font-medium text-khummela-muted">Session</p>
-              <p className="mt-1 text-lg font-semibold text-khummela-text">
-                24 hours
-              </p>
-            </div>
-          </div>
-
-          <p className="mt-8 text-sm text-khummela-muted">
-            Missing persons case management features will be available here.
-          </p>
+        <div className="mt-6 space-y-3">
+          {loading ? (
+            <>
+              <CaseCardSkeleton />
+              <CaseCardSkeleton />
+              <CaseCardSkeleton />
+            </>
+          ) : cases.length === 0 ? (
+            <EmptyState
+              title="No cases found"
+              description="Try a different search or report a new case to get started."
+              actionLabel="Report missing"
+              onAction={() => (window.location.href = "/report/missing")}
+            />
+          ) : (
+            cases.map((c) => (
+              <CaseCard key={c.id} caseRecord={c} href={`/dashboard/cases/${c.id}`} />
+            ))
+          )}
         </div>
-      </main>
-    </div>
+      </div>
+      <BottomNav />
+    </MobileShell>
   );
 }
