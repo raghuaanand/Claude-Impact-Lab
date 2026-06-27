@@ -11,21 +11,21 @@ export function StepIndicator({ steps, currentStep }: Pick<StepWizardProps, "ste
     <div className="mb-8">
       <div className="flex items-center justify-between gap-2">
         {steps.map((step, i) => (
-          <div key={step} className="flex flex-1 flex-col items-center gap-2">
+          <div key={step} className="flex flex-1 flex-col items-center gap-1.5">
             <div
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+                "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300",
                 i <= currentStep
-                  ? "bg-khummela-primary text-white"
-                  : "bg-khummela-surface text-khummela-muted"
+                  ? "bg-khummela-primary text-white shadow-sm shadow-khummela-primary/10"
+                  : "bg-black/[0.04] text-khummela-muted"
               )}
             >
               {i + 1}
             </div>
             <span
               className={cn(
-                "hidden text-center text-xs sm:block",
-                i === currentStep ? "font-medium text-khummela-text" : "text-khummela-muted"
+                "hidden text-center text-[10px] font-bold tracking-wide uppercase sm:block",
+                i === currentStep ? "text-khummela-text" : "text-khummela-muted/65"
               )}
             >
               {step}
@@ -33,15 +33,16 @@ export function StepIndicator({ steps, currentStep }: Pick<StepWizardProps, "ste
           </div>
         ))}
       </div>
-      <div className="mt-4 h-1 overflow-hidden rounded-full bg-khummela-surface">
+      <div className="mt-4 h-[3px] overflow-hidden rounded-full bg-black/[0.04]">
         <div
-          className="h-full rounded-full bg-khummela-primary transition-all duration-300 ease-out"
+          className="h-full rounded-full bg-khummela-primary transition-all duration-500 ease-out"
           style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
         />
       </div>
     </div>
   );
 }
+
 
 export function StepWizard({ steps, currentStep, children }: StepWizardProps) {
   return (

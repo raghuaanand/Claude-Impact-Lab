@@ -35,19 +35,32 @@ export default function SearchPage() {
 
   return (
     <AppShell role={role}>
-      <div className="mx-auto max-w-lg px-4 py-6">
-        <h1 className="text-2xl font-semibold">Search all centers</h1>
-        <p className="mt-1 text-sm text-khummela-muted">
-          The core reunification feature — search everywhere at once
-        </p>
-        <SearchBar className="mt-6" value={query} onChange={setQuery} />
-        <div className="mt-6 space-y-3">
+      <div className="mx-auto max-w-4xl px-6 py-10 lg:max-w-6xl">
+        <header className="space-y-1">
+          <h1 className="text-3xl font-extrabold tracking-tight text-khummela-text md:text-4xl">Search Mela Centers</h1>
+          <p className="text-sm font-semibold text-khummela-muted leading-relaxed max-w-xl">
+            The core reunification directory — search across all zones instantly.
+          </p>
+        </header>
+
+        <SearchBar className="mt-8" value={query} onChange={setQuery} />
+
+        <div className="mt-8 space-y-4">
           {loading ? (
-            <CaseCardSkeleton />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <CaseCardSkeleton />
+              <CaseCardSkeleton />
+            </div>
+          ) : cases.length === 0 && query.trim() ? (
+            <div className="text-center p-12 border border-black/[0.03] bg-white rounded-3xl text-sm font-semibold text-khummela-muted/65">
+              No matching records found
+            </div>
           ) : (
-            cases.map((c) => (
-              <CaseCard key={c.id} caseRecord={c} href={`/dashboard/cases/${c.id}`} />
-            ))
+            <div className="grid gap-4 sm:grid-cols-2">
+              {cases.map((c) => (
+                <CaseCard key={c.id} caseRecord={c} href={`/dashboard/cases/${c.id}`} />
+              ))}
+            </div>
           )}
         </div>
       </div>

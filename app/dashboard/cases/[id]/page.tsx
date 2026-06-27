@@ -20,6 +20,8 @@ export default function CaseDetailPage() {
   const id = params.id as string;
   const role = session?.user?.role;
   const isSupervisor = role === "SUPERVISOR" || role === "POLICE";
+  const canUpdateCaseStatus =
+    role === "VOLUNTEER" || role === "SUPERVISOR" || role === "POLICE";
 
   const [caseRecord, setCaseRecord] = useState<SafeCase | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export default function CaseDetailPage() {
     if (res.ok) {
       setActionMsg(
         data.matches?.length
-          ? `Found ${data.matches.length} possible match(es). Check Command center.`
+          ? `Found ${data.matches.length} possible match(es). Check Command Center.`
           : "No matches above threshold. Try adding more description details."
       );
       reload();
@@ -78,12 +80,36 @@ export default function CaseDetailPage() {
     }
   }
 
+  async function markTransferred() {
+    if (
+      !confirm(
+        "Mark this case as transferred to a hospital or medical facility? The case will no longer appear as active on the dashboard."
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    const res = await fetch(`/api/cases/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "TRANSFERRED" }),
+    });
+    setBusy(false);
+    if (res.ok) {
+      setActionMsg("Case marked as transferred to hospital");
+      reload();
+    } else {
+      const data = await res.json();
+      setActionMsg(data.error ?? "Could not update case");
+    }
+  }
+
   if (loading) {
     return (
       <AppShell role={role}>
-        <div className="p-4">
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="mt-4 h-48 w-full" />
+        <div className="mx-auto max-w-4xl px-6 py-10">
+          <Skeleton className="h-8 w-1/2 rounded-full" />
+          <Skeleton className="mt-6 h-64 w-full rounded-[24px]" />
         </div>
         <BottomNav />
       </AppShell>
@@ -93,7 +119,9 @@ export default function CaseDetailPage() {
   if (!caseRecord) {
     return (
       <AppShell role={role}>
-        <p className="p-8 text-center text-khummela-muted">Case not found</p>
+        <div className="mx-auto max-w-4xl px-6 py-16 text-center">
+          <p className="text-sm font-bold text-khummela-muted">Case not found</p>
+        </div>
         <BottomNav />
       </AppShell>
     );
@@ -101,92 +129,134 @@ export default function CaseDetailPage() {
 
   return (
     <AppShell role={role}>
-      <div className="mx-auto max-w-lg px-4 py-6">
-        <Link href="/dashboard" className="text-sm text-khummela-accent">
-          ← Back
+      <div className="mx-auto max-w-4xl px-6 py-10 lg:max-w-6xl">
+        <Link href="/dashboard" className="text-xs font-bold text-khummela-primary transition-colors hover:text-khummela-primary-dark">
+          ← Back to Dashboard
         </Link>
-        <div className="mt-4 flex items-start justify-between">
+        
+        <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">
-              {caseRecord.personName || "Unknown"}
+            <h1 className="text-3xl font-extrabold tracking-tight text-khummela-text md:text-4xl">
+              {caseRecord.personName || "Unknown Name"}
             </h1>
-            <p className="font-mono text-sm text-khummela-muted">{caseRecord.caseRef}</p>
+            <p className="font-mono text-xs font-bold uppercase tracking-wider text-khummela-muted mt-1">{caseRecord.caseRef}</p>
           </div>
-          <Badge status={caseRecord.status} />
+          <Badge status={caseRecord.status} className="text-xs self-start" />
         </div>
 
-        {caseRecord.media[0] && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={caseRecord.media[0].cdnUrl}
-            alt=""
-            className="mt-6 aspect-video w-full rounded-2xl object-cover"
-          />
-        )}
+        <div className="mt-8 grid gap-8 md:grid-cols-2">
+          {/* Column Left: Photo Frame */}
+          <div className="space-y-6">
+            <div className="aspect-[4/3] w-full overflow-hidden rounded-[24px] bg-black/[0.02] border border-black/[0.04] shadow-[0_6px_20px_rgba(0,0,0,0.015)]">
+              {caseRecord.media[0] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={caseRecord.media[0].cdnUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-7xl font-extrabold text-khummela-muted/30">
+                  {(caseRecord.personName?.[0] ?? "?").toUpperCase()}
+                </div>
+              )}
+            </div>
 
-        <Card className="mt-6 space-y-3 text-sm">
-          <Row label="Type" value={caseRecord.type} />
-          <Row label="Age" value={caseRecord.ageBand} />
-          <Row label="Gender" value={caseRecord.gender} />
-          <Row label="Language" value={caseRecord.language} />
-          <Row label="Zone" value={caseRecord.zoneName} />
-          <Row label="Last seen" value={caseRecord.lastSeenText} />
-          <Row label="Center" value={caseRecord.reportingCenter} />
-          <Row label="Description" value={caseRecord.physicalDescription} />
-          {caseRecord.reporterPhone && (
-            <Row label="Contact" value={caseRecord.reporterPhone} />
-          )}
-          {caseRecord.remarks && isSupervisor && (
-            <Row label="Remarks" value={caseRecord.remarks} />
-          )}
-        </Card>
+            <CctvAlertList
+              caseId={caseRecord.id}
+              caseType={caseRecord.type}
+              canDispatch={isSupervisor}
+            />
+          </div>
 
-        <CctvAlertList
-          caseId={caseRecord.id}
-          caseType={caseRecord.type}
-          canDispatch={isSupervisor}
-        />
+          {/* Column Right: Attributes Table */}
+          <div className="space-y-6">
+            <Card className="p-6 border border-black/[0.03] bg-white rounded-[24px] space-y-4">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-khummela-muted border-b border-black/[0.03] pb-3">Case Specifications</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <Row label="Type" value={caseRecord.type} />
+                <Row label="Age" value={caseRecord.ageBand} />
+                <Row label="Gender" value={caseRecord.gender} />
+                <Row label="Language" value={caseRecord.language} />
+                <Row label="Zone" value={caseRecord.zoneName} />
+                <Row label="Last seen" value={caseRecord.lastSeenText} />
+                <Row label="Center" value={caseRecord.reportingCenter} />
+                {caseRecord.reporterPhone && (
+                  <Row label="Contact" value={caseRecord.reporterPhone} />
+                )}
+              </div>
+              {caseRecord.physicalDescription && (
+                <div className="border-t border-black/[0.03] pt-4">
+                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Physical Description</span>
+                  <p className="text-xs text-khummela-text font-semibold mt-1.5 leading-relaxed">{caseRecord.physicalDescription}</p>
+                </div>
+              )}
+              {caseRecord.remarks && isSupervisor && (
+                <div className="border-t border-black/[0.03] pt-4">
+                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Supervisor Remarks</span>
+                  <p className="text-xs text-khummela-text font-semibold mt-1.5 leading-relaxed">{caseRecord.remarks}</p>
+                </div>
+              )}
+            </Card>
 
-        {actionMsg && (
-          <p className="mt-4 text-sm text-khummela-accent">{actionMsg}</p>
-        )}
-
-        <div className="mt-6 space-y-3">
-          {caseRecord.type === "FOUND" &&
-            ["OPEN", "MATCH_PENDING"].includes(caseRecord.status) && (
-              <Button
-                className="w-full"
-                size="lg"
-                variant="secondary"
-                loading={busy}
-                onClick={recomputeMatches}
-              >
-                Run match search again
-              </Button>
+            {actionMsg && (
+              <div className="rounded-2xl bg-khummela-primary/[0.08] border border-khummela-primary/10 px-4 py-3 text-xs font-bold text-khummela-primary">
+                {actionMsg}
+              </div>
             )}
 
-          {caseRecord.status === "MATCH_PENDING" && isSupervisor && (
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={() => router.push("/management")}
-            >
-              Review matches in Command center
-            </Button>
-          )}
+            <div className="space-y-3">
+              {caseRecord.type === "FOUND" &&
+                ["OPEN", "MATCH_PENDING"].includes(caseRecord.status) && (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    loading={busy}
+                    onClick={recomputeMatches}
+                  >
+                    Run Match Search
+                  </Button>
+                )}
 
-          {isSupervisor &&
-            !["RESOLVED", "DUPLICATE"].includes(caseRecord.status) && (
-              <Button
-                className="w-full"
-                size="lg"
-                variant="outline"
-                loading={busy}
-                onClick={markResolved}
-              >
-                Mark as resolved (manual)
-              </Button>
-            )}
+              {caseRecord.status === "MATCH_PENDING" && isSupervisor && (
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={() => router.push("/management")}
+                >
+                  Review Matches in Command Center
+                </Button>
+              )}
+
+              {canUpdateCaseStatus &&
+                !["RESOLVED", "DUPLICATE", "TRANSFERRED", "UNRESOLVED"].includes(
+                  caseRecord.status
+                ) && (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    variant="outline"
+                    loading={busy}
+                    onClick={markTransferred}
+                  >
+                    Mark as Transferred to Hospital
+                  </Button>
+                )}
+
+              {isSupervisor &&
+                !["RESOLVED", "DUPLICATE", "TRANSFERRED"].includes(caseRecord.status) && (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    variant="outline"
+                    loading={busy}
+                    onClick={markResolved}
+                  >
+                    Mark as Resolved (Manual)
+                  </Button>
+                )}
+            </div>
+          </div>
         </div>
       </div>
       <BottomNav />
@@ -197,11 +267,9 @@ export default function CaseDetailPage() {
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null;
   return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wider text-khummela-muted">
-        {label}
-      </p>
-      <p className="mt-0.5 text-khummela-text">{value}</p>
+    <div className="border-b border-black/[0.03] pb-3 last:border-0 last:pb-0">
+      <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">{label}</span>
+      <span className="text-khummela-text text-xs font-bold block mt-0.5">{value}</span>
     </div>
   );
 }

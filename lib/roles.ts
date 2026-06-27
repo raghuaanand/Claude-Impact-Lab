@@ -1,4 +1,6 @@
 import type { Role } from "@/app/generated/prisma/client";
+import type { Locale } from "@/lib/i18n/config";
+import { roleLabelFromMessages } from "@/lib/i18n/translate";
 
 export const SUPERVISOR_ROLES: Role[] = ["SUPERVISOR", "POLICE"];
 export const STAFF_ROLES: Role[] = ["VOLUNTEER", "SUPERVISOR", "POLICE"];
@@ -16,7 +18,8 @@ export function canSeePii(role: Role): boolean {
   return isSupervisor(role);
 }
 
-export function roleLabel(role: Role): string {
+export function roleLabel(role: Role, locale?: Locale): string {
+  if (locale) return roleLabelFromMessages(locale, role);
   const labels: Record<Role, string> = {
     FAMILY: "Family",
     VOLUNTEER: "Volunteer",

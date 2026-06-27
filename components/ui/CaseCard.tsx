@@ -18,8 +18,8 @@ function timeAgo(date: Date): string {
 
 export function CaseCard({ caseRecord, href }: CaseCardProps) {
   const content = (
-    <Card className="flex gap-4 p-4 transition-shadow hover:shadow-md active:scale-[0.99]">
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-khummela-surface">
+    <Card className="flex gap-4 p-4.5 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_30px_rgba(0,0,0,0.03)] border border-black/[0.03] bg-white active:scale-[0.98]">
+      <div className="flex h-18 w-18 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-black/[0.02] border border-black/[0.03]">
         {caseRecord.media[0]?.cdnUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -28,38 +28,41 @@ export function CaseCard({ caseRecord, href }: CaseCardProps) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <span className="text-2xl font-semibold text-khummela-muted">
+          <span className="text-2xl font-bold text-khummela-muted/60">
             {(caseRecord.personName?.[0] ?? "?").toUpperCase()}
           </span>
         )}
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 flex flex-col justify-between">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="font-semibold text-khummela-text">
-              {caseRecord.personName || "Unknown name"}
+            <p className="font-bold text-base tracking-tight text-khummela-text">
+              {caseRecord.personName || "Unknown Name"}
             </p>
-            <p className="font-mono text-xs text-khummela-muted">{caseRecord.caseRef}</p>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-khummela-muted mt-0.5">{caseRecord.caseRef}</p>
           </div>
           <Badge status={caseRecord.status} />
         </div>
-        <p className="mt-2 text-sm text-khummela-muted">
-          {caseRecord.ageBand} · {caseRecord.gender}
+        <p className="mt-2 text-xs font-semibold text-khummela-muted">
+          {caseRecord.ageBand} yrs · {caseRecord.gender}
           {caseRecord.language ? ` · ${caseRecord.language}` : ""}
         </p>
-        {caseRecord.zoneName && (
-          <p className="mt-1 flex items-center gap-1 text-sm text-khummela-accent">
-            <MapPin className="h-3.5 w-3.5" />
-            {caseRecord.zoneName}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-black/[0.03] pt-2">
+          {caseRecord.zoneName && (
+            <p className="flex items-center gap-1 text-xs font-bold text-khummela-primary">
+              <MapPin className="h-3 w-3" />
+              {caseRecord.zoneName}
+            </p>
+          )}
+          <p className="text-[10px] font-bold text-khummela-muted/80">
+            {timeAgo(caseRecord.reportedAt)}
+            {caseRecord.reportingCenter ? ` · ${caseRecord.reportingCenter}` : ""}
           </p>
-        )}
-        <p className="mt-1 text-xs text-khummela-muted">
-          {timeAgo(caseRecord.reportedAt)}
-          {caseRecord.reportingCenter ? ` · ${caseRecord.reportingCenter}` : ""}
-        </p>
+        </div>
       </div>
     </Card>
   );
+
 
   if (href) {
     return (
