@@ -38,5 +38,5 @@ export async function sendSms(to: string, message: string): Promise<void> {
     );
   }
 
-  console.log(`[KHUMMELA SMS DEV] To: ${to} | Message: ${message}`);
+  console.log(`[SANGAM CONNECT SMS DEV] To: ${to} | Message: ${message}`);
 }

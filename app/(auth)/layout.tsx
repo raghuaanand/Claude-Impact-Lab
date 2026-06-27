@@ -6,23 +6,37 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-full flex-col lg:flex-row">
-      <div className="relative flex flex-col justify-between bg-khummela-primary px-8 py-10 text-white lg:w-2/5 lg:px-12 lg:py-16">
+    <div className="flex min-h-screen flex-col lg:flex-row">
+      {/* Mobile-only slim brand header — form appears immediately below */}
+      <div className="flex items-center gap-3 border-b border-khummela-border bg-white px-5 py-3 lg:hidden">
+        <Link href="/" className="inline-flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-khummela-primary font-bold text-white">
+            SC
+          </div>
+          <div>
+            <p className="text-sm font-semibold leading-none text-khummela-text">Sangam Connect</p>
+            <p className="mt-0.5 text-xs text-khummela-muted">Together we find hope</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Desktop-only left brand panel */}
+      <div className="relative hidden flex-col justify-between bg-khummela-primary px-12 py-16 text-white lg:flex lg:w-2/5">
         <div>
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-khummela-accent font-bold text-lg">
-              K
+              SC
             </div>
-            <span className="text-xl font-semibold tracking-tight">KHUMMELA</span>
+            <span className="text-xl font-semibold tracking-tight">Sangam Connect</span>
           </Link>
         </div>
 
-        <div className="my-12 lg:my-0">
-          <h1 className="text-3xl font-bold leading-tight lg:text-4xl">
+        <div>
+          <h1 className="text-4xl font-bold leading-tight">
             Together we find hope
           </h1>
           <p className="mt-4 text-lg text-white/80 leading-relaxed">
-            KHUMMELA helps communities identify and locate missing persons.
+            Sangam Connect helps communities identify and locate missing persons.
             Join our network of volunteers and coordinators working to reunite
             families.
           </p>
@@ -44,7 +58,7 @@ export default function AuthLayout({
         </p>
 
         <div
-          className="absolute inset-0 opacity-5 pointer-events-none"
+          className="pointer-events-none absolute inset-0 opacity-5"
           style={{
             backgroundImage:
               "radial-gradient(circle at 20% 80%, white 1px, transparent 1px)",
@@ -53,7 +67,8 @@ export default function AuthLayout({
         />
       </div>
 
-      <div className="flex flex-1 items-center justify-center px-6 py-12 lg:px-16">
+      {/* Form area — full screen on mobile, right column on desktop */}
+      <div className="flex flex-1 items-start justify-center px-6 py-8 lg:items-center lg:px-16">
         <div className="w-full max-w-md">{children}</div>
       </div>
     </div>

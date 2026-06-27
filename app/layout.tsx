@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KHUMMELA — Missing Persons Identification",
+  title: "Sangam Connect — Missing Persons Identification",
   description:
-    "KHUMMELA helps communities identify and locate missing persons. Together we find hope.",
+    "Sangam Connect helps communities identify and locate missing persons. Together we find hope.",
 };
 
 export default function RootLayout({

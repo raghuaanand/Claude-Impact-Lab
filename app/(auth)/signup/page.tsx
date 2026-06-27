@@ -18,7 +18,7 @@ export default function SignUpPage() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-khummela-text">Join KHUMMELA</h2>
+        <h2 className="text-2xl font-bold text-khummela-text">Join Sangam Connect</h2>
         <p className="mt-2 text-khummela-muted">
           Create an account to help identify and locate missing persons
         </p>

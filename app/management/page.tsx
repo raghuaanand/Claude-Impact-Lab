@@ -56,7 +56,7 @@ export default function ManagementPage() {
   }
 
   return (
-    <MobileShell title="Command Center">
+    <MobileShell>
       <div className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-3xl font-semibold tracking-tight">Command Center</h1>
         <p className="mt-1 text-khummela-muted">Supervisor overview — all zones</p>
@@ -78,8 +78,9 @@ export default function ManagementPage() {
           <p className="text-sm text-khummela-muted">Human review required — no auto-reunification</p>
           <div className="mt-6 space-y-8">
             {matches.length === 0 ? (
-              <Card className="text-center text-sm text-khummela-muted">
-                No pending matches
+              <Card className="py-10 text-center text-sm text-khummela-muted">
+                <p className="font-medium text-khummela-text">No pending matches</p>
+                <p className="mt-1">AI-suggested matches will appear here for your review.</p>
               </Card>
             ) : (
               matches.map((m) => (
@@ -135,8 +136,8 @@ export default function ManagementPage() {
               <button
                 type="button"
                 onClick={() => setZoneFilter("")}
-                className={`rounded-full px-3 py-1 text-sm ${
-                  !zoneFilter ? "bg-khummela-primary text-white" : "bg-khummela-surface"
+                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-accent focus-visible:ring-offset-1 ${
+                  !zoneFilter ? "bg-khummela-primary text-white" : "bg-khummela-surface text-khummela-muted hover:text-khummela-text"
                 }`}
               >
                 All zones
@@ -146,8 +147,8 @@ export default function ManagementPage() {
                   key={z.id}
                   type="button"
                   onClick={() => setZoneFilter(z.id)}
-                  className={`rounded-full px-3 py-1 text-sm ${
-                    zoneFilter === z.id ? "bg-khummela-primary text-white" : "bg-khummela-surface"
+                  className={`rounded-full px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-accent focus-visible:ring-offset-1 ${
+                    zoneFilter === z.id ? "bg-khummela-primary text-white" : "bg-khummela-surface text-khummela-muted hover:text-khummela-text"
                   }`}
                 >
                   {z.code} ({z.count})

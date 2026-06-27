@@ -161,11 +161,12 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
       </div>
 
       {mode === "signin" && (
-        <div className="flex gap-2">
+        <div role="group" aria-label="Sign-in method" className="flex gap-2">
           <button
             type="button"
+            aria-pressed={authMethod === "password"}
             onClick={() => setAuthMethod("password")}
-            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-accent focus-visible:ring-offset-1 ${
               authMethod === "password"
                 ? "bg-khummela-primary text-white"
                 : "bg-khummela-surface text-khummela-muted hover:text-khummela-text"
@@ -175,14 +176,15 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
           </button>
           <button
             type="button"
+            aria-pressed={authMethod === "otp"}
             onClick={() => setAuthMethod("otp")}
-            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-accent focus-visible:ring-offset-1 ${
               authMethod === "otp"
                 ? "bg-khummela-primary text-white"
                 : "bg-khummela-surface text-khummela-muted hover:text-khummela-text"
             }`}
           >
-            OTP
+            One-time code
           </button>
         </div>
       )}

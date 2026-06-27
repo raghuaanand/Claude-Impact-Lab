@@ -48,7 +48,7 @@ export async function createAndSendOtp(
     },
   });
 
-  const message = `Your KHUMMELA verification code is ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes. Do not share this code.`;
+  const message = `Your Sangam Connect verification code is ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes. Do not share this code.`;
   await sendSms(normalizedMobile, message);
 }
 

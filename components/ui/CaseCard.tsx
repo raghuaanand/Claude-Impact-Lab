@@ -24,7 +24,7 @@ export function CaseCard({ caseRecord, href }: CaseCardProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={caseRecord.media[0].cdnUrl}
-            alt=""
+            alt={caseRecord.personName ? `Photo of ${caseRecord.personName}` : "Case photo"}
             className="h-full w-full object-cover"
           />
         ) : (

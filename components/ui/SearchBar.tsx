@@ -24,7 +24,8 @@ export function SearchBar({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-khummela-border bg-white pl-12 pr-10 text-base shadow-sm focus:border-khummela-accent focus:outline-none focus:ring-2 focus:ring-khummela-accent/20"
+        aria-label={placeholder}
+        className="h-12 w-full rounded-xl border border-khummela-border bg-white pl-12 pr-10 text-base shadow-sm placeholder:text-khummela-muted focus:border-khummela-accent focus:outline-none focus:ring-2 focus:ring-khummela-accent/20"
       />
       {value && (
         <button

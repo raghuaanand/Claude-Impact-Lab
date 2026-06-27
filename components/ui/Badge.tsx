@@ -6,7 +6,7 @@ const variants = {
   RESOLVED: "bg-khummela-success/10 text-khummela-success",
   TRANSFERRED: "bg-khummela-hope/15 text-khummela-hope",
   UNRESOLVED: "bg-khummela-muted/15 text-khummela-muted",
-  DUPLICATE: "bg-khummela-hope/20 text-khummela-primary",
+  DUPLICATE: "bg-khummela-muted/15 text-khummela-text",
   SUGGESTED: "bg-khummela-accent/10 text-khummela-accent",
   APPROVED: "bg-khummela-success/10 text-khummela-success",
   REJECTED: "bg-khummela-error/10 text-khummela-error",

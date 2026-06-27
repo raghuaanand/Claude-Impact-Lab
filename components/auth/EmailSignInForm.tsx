@@ -58,7 +58,15 @@ export function EmailSignInForm() {
       </div>
 
       <div>
-        <Label htmlFor="signin-password">Password</Label>
+        <div className="mb-1.5 flex items-center justify-between">
+          <Label htmlFor="signin-password" className="mb-0">Password</Label>
+          <a
+            href="/forgot-password"
+            className="text-xs text-khummela-accent hover:text-khummela-accent-dark"
+          >
+            Forgot password?
+          </a>
+        </div>
         <Input
           id="signin-password"
           type="password"

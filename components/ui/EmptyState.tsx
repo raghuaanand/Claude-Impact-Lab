@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "./Button";
 
 type EmptyStateProps = {
@@ -15,6 +16,7 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  href,
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
@@ -27,7 +29,14 @@ export function EmptyState({
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-khummela-muted">
         {description}
       </p>
-      {actionLabel && onAction && (
+      {actionLabel && href && (
+        <Link href={href}>
+          <Button className="mt-6" size="lg">
+            {actionLabel}
+          </Button>
+        </Link>
+      )}
+      {actionLabel && onAction && !href && (
         <Button className="mt-6" size="lg" onClick={onAction}>
           {actionLabel}
         </Button>

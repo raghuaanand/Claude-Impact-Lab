@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { MobileShell } from "@/components/layout/MobileShell";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Card } from "@/components/ui/Card";
@@ -49,8 +50,12 @@ export default function CaseDetailPage() {
   return (
     <MobileShell>
       <div className="mx-auto max-w-lg px-4 py-6">
-        <Link href="/dashboard" className="text-sm text-khummela-accent">
-          ← Back
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1 text-sm text-khummela-accent hover:text-khummela-accent-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-accent rounded"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
         </Link>
         <div className="mt-4 flex items-start justify-between">
           <div>
@@ -66,8 +71,8 @@ export default function CaseDetailPage() {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={caseRecord.media[0].cdnUrl}
-            alt=""
-            className="mt-6 aspect-video w-full rounded-2xl object-cover"
+            alt={caseRecord.personName ? `Photo of ${caseRecord.personName}` : "Case photo"}
+            className="mt-6 aspect-[4/3] w-full rounded-2xl object-cover"
           />
         )}
 

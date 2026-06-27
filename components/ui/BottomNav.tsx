@@ -23,11 +23,15 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-xs font-medium transition-colors",
-                active ? "text-khummela-primary" : "text-khummela-muted"
+                "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-accent focus-visible:ring-inset",
+                active ? "text-khummela-primary" : "text-khummela-muted hover:text-khummela-text"
               )}
             >
+              {active && (
+                <span className="absolute inset-x-3 top-0 h-0.5 rounded-b-full bg-khummela-primary" />
+              )}
               <Icon className="h-5 w-5" />
               {label}
             </Link>

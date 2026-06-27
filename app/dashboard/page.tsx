@@ -44,7 +44,7 @@ export default function DashboardPage() {
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Link href="/report/missing">
-            <Card className="flex h-24 items-center gap-4 p-4 transition-shadow hover:shadow-md">
+            <Card className="flex min-h-[6rem] items-center gap-4 p-4 transition-shadow hover:shadow-md">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-khummela-primary/10 text-khummela-primary">
                 <UserPlus className="h-6 w-6" />
               </div>
@@ -55,7 +55,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           <Link href="/report/found">
-            <Card className="flex h-24 items-center gap-4 p-4 transition-shadow hover:shadow-md">
+            <Card className="flex min-h-[6rem] items-center gap-4 p-4 transition-shadow hover:shadow-md">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-khummela-accent/10 text-khummela-accent">
                 <Users className="h-6 w-6" />
               </div>
@@ -79,9 +79,9 @@ export default function DashboardPage() {
           ) : cases.length === 0 ? (
             <EmptyState
               title="No cases found"
-              description="Try a different search or report a new case to get started."
-              actionLabel="Report missing"
-              onAction={() => (window.location.href = "/report/missing")}
+              description="Try a different search term, or report a new missing person to get started."
+              actionLabel="Report missing person"
+              href="/report/missing"
             />
           ) : (
             cases.map((c) => (

@@ -139,6 +139,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
 
   if (doneRef) {
     return (
+      <div className="px-4 py-8">
       <Card className="mx-auto max-w-md text-center">
         <p className="text-sm font-medium text-khummela-success">Report submitted</p>
         <p className="mt-4 text-2xl font-semibold text-khummela-text">Case registered</p>
@@ -153,6 +154,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
           Done
         </Button>
       </Card>
+      </div>
     );
   }
 
