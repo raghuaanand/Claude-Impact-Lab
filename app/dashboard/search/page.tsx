@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-import { MobileShell } from "@/components/layout/MobileShell";
+import { useSession } from "next-auth/react";
+import { AppShell } from "@/components/layout/MobileShell";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { CaseCard } from "@/components/ui/CaseCard";
@@ -10,6 +10,8 @@ import { CaseCardSkeleton } from "@/components/ui/Skeleton";
 import type { SafeCase } from "@/lib/case-access";
 
 export default function SearchPage() {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
   const [cases, setCases] = useState<SafeCase[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
@@ -32,7 +34,7 @@ export default function SearchPage() {
   }, [query, load]);
 
   return (
-    <MobileShell>
+    <AppShell role={role}>
       <div className="mx-auto max-w-lg px-4 py-6">
         <h1 className="text-2xl font-semibold">Search all centers</h1>
         <p className="mt-1 text-sm text-khummela-muted">
@@ -50,6 +52,6 @@ export default function SearchPage() {
         </div>
       </div>
       <BottomNav />
-    </MobileShell>
+    </AppShell>
   );
 }

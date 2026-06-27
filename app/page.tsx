@@ -19,8 +19,16 @@ export default async function Home() {
           </div>
           <div className="flex items-center gap-3">
             {session ? (
-              <Link href="/dashboard">
-                <Button size="sm">Dashboard</Button>
+              <Link
+                href={
+                  session.user.role === "FAMILY"
+                    ? "/report/status"
+                    : "/dashboard"
+                }
+              >
+                <Button size="sm">
+                  {session.user.role === "FAMILY" ? "My cases" : "Dashboard"}
+                </Button>
               </Link>
             ) : (
               <>
@@ -58,12 +66,18 @@ export default async function Home() {
                   Report missing person
                 </Button>
               </Link>
-              <Link href="/signin">
+              <Link href="/report/status">
                 <Button variant="outline" size="lg" className="min-w-[220px]">
-                  Volunteer sign in
+                  Track case status
                 </Button>
               </Link>
             </div>
+            <p className="mt-4 text-sm text-khummela-muted">
+              Volunteers and coordinators{" "}
+              <Link href="/signin" className="text-khummela-accent underline">
+                sign in here
+              </Link>
+            </p>
           </div>
         </section>
 

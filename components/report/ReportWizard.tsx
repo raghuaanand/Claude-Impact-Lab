@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/Label";
 import { StepWizard } from "@/components/ui/StepWizard";
 import { PhotoUpload } from "@/components/ui/PhotoUpload";
 import { Card } from "@/components/ui/Card";
-import { extractDescriptors } from "@/lib/voice/intake";
+import {
+  extractDescriptors,
+  listenForSpeech,
+  voiceCaptureErrorMessage,
+} from "@/lib/voice/intake";
 import { Mic } from "lucide-react";
 
 const AGE_BANDS = ["0-12", "13-17", "18-40", "41-60", "61-70", "71-80", "80+"];
@@ -35,6 +39,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [doneRef, setDoneRef] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
 
   const [form, setForm] = useState({
     personName: "",
@@ -60,31 +65,11 @@ export function ReportWizard({ type }: ReportWizardProps) {
   const update = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
 
   async function handleVoice() {
-    if (typeof window === "undefined") return;
-    const W = window as Window & {
-      SpeechRecognition?: new () => {
-        lang: string;
-        onresult: ((e: { results: { transcript: string }[][] }) => void) | null;
-        onerror: ((e: { error: string }) => void) | null;
-        start: () => void;
-      };
-      webkitSpeechRecognition?: new () => {
-        lang: string;
-        onresult: ((e: { results: { transcript: string }[][] }) => void) | null;
-        onerror: ((e: { error: string }) => void) | null;
-        start: () => void;
-      };
-    };
-    const SpeechRecognition = W.SpeechRecognition ?? W.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setError("Voice input not supported in this browser");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "hi-IN";
-    recognition.onresult = (e) => {
-      const text = e.results[0]?.[0]?.transcript ?? "";
+    if (listening) return;
+    setError("");
+    setListening(true);
+    try {
+      const text = await listenForSpeech(form.language);
       const extracted = extractDescriptors(text);
       update({
         physicalDescription: text,
@@ -92,9 +77,16 @@ export function ReportWizard({ type }: ReportWizardProps) {
         gender: extracted.gender ?? form.gender,
         lastSeenText: extracted.location ?? form.lastSeenText,
       });
-    };
-    recognition.onerror = () => setError("Could not capture voice");
-    recognition.start();
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "";
+      const message =
+        code === "Speech recognition not supported in this browser"
+          ? "Voice input not supported in this browser"
+          : voiceCaptureErrorMessage(code);
+      if (message) setError(message);
+    } finally {
+      setListening(false);
+    }
   }
 
   async function uploadPhoto(id: string) {
@@ -271,9 +263,13 @@ export function ReportWizard({ type }: ReportWizardProps) {
                 <button
                   type="button"
                   onClick={handleVoice}
-                  className="flex items-center gap-1 text-sm text-khummela-accent"
+                  disabled={listening}
+                  className={`flex items-center gap-1 text-sm ${
+                    listening ? "text-khummela-muted" : "text-khummela-accent"
+                  }`}
                 >
-                  <Mic className="h-4 w-4" /> Voice
+                  <Mic className={`h-4 w-4 ${listening ? "animate-pulse" : ""}`} />
+                  {listening ? "Listening…" : "Voice"}
                 </button>
               </div>
               <textarea

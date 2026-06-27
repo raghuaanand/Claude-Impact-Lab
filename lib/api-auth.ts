@@ -36,3 +36,12 @@ export async function requireSupervisor() {
   }
   return result;
 }
+
+export async function requirePolice() {
+  const result = await requireAuth();
+  if ("error" in result) return result;
+  if (result.session.user.role !== "POLICE") {
+    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+  return result;
+}

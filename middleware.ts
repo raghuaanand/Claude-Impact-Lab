@@ -18,7 +18,9 @@ export default auth((req) => {
   const isProtected = isDashboard || isManagement || isAdmin;
 
   if (isAuthPage && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    const dest =
+      role === "FAMILY" ? "/report/status" : "/dashboard";
+    return NextResponse.redirect(new URL(dest, req.nextUrl));
   }
 
   if (!isLoggedIn && isProtected) {
