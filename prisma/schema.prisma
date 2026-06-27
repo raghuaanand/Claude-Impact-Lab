@@ -28,6 +28,12 @@ model User {
   accounts Account[]
   sessions Session[]
   otpCodes OtpCode[]
+
+  missingReports   MissingReport[]
+  foundReports     FoundReport[]
+  suggestedMatches MatchSuggestion[] @relation("SuggestedMatches")
+  reviewedMatches   MatchSuggestion[] @relation("ReviewedMatches")
+  auditLogs        AuditLog[]
 }
 
 model Account {
@@ -78,3 +84,188 @@ model OtpCode {
 
   @@index([mobile, purpose])
 }
+
+enum ReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  CLOSED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum MatchStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum AuditAction {
+  CREATED
+  UPDATED
+  DELETED
+  STATUS_CHANGED
+  MATCH_SUGGESTED
+  MATCH_CONFIRMED
+  MATCH_REJECTED
+}
+
+enum EntityType {
+  MISSING_REPORT
+  FOUND_REPORT
+  MATCH_SUGGESTION
+}
+
+model Location {
+  id         String   @id @default(cuid())
+  latitude   Float?
+  longitude  Float?
+  address    String?
+  city       String?
+  state      String?
+  country    String?
+  postalCode String?
+  createdAt  DateTime @default(now())
+
+  missingReports MissingReport[]
+  foundReports   FoundReport[]
+
+  @@index([latitude, longitude])
+  @@index([city, state, country])
+}
+
+model MissingReport {
+  id           String       @id @default(cuid())
+  reporterId   String
+  reporter     User         @relation(fields: [reporterId], references: [id])
+  personName   String
+  age          Int?
+  gender       Gender       @default(UNKNOWN)
+  description  String?
+  lastSeenAt   DateTime?
+  locationId   String?
+  location     Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  status       ReportStatus @default(OPEN)
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  images           ReportImage[]
+  audio            ReportAudio[]
+  matchSuggestions MatchSuggestion[]
+  auditLogs        AuditLog[]
+
+  @@index([status])
+  @@index([reporterId])
+  @@index([locationId])
+  @@index([lastSeenAt])
+  @@index([personName])
+}
+
+model FoundReport {
+  id           String       @id @default(cuid())
+  reporterId   String
+  reporter     User         @relation(fields: [reporterId], references: [id])
+  age          Int?
+  gender       Gender       @default(UNKNOWN)
+  description  String?
+  foundAt      DateTime?
+  locationId   String?
+  location     Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  status       ReportStatus @default(OPEN)
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  images           ReportImage[]
+  audio            ReportAudio[]
+  matchSuggestions MatchSuggestion[]
+  auditLogs        AuditLog[]
+
+  @@index([status])
+  @@index([reporterId])
+  @@index([locationId])
+  @@index([foundAt])
+}
+
+model ReportImage {
+  id              String         @id @default(cuid())
+  url             String
+  missingReportId String?
+  missingReport   MissingReport? @relation(fields: [missingReportId], references: [id], onDelete: Cascade)
+  foundReportId   String?
+  foundReport     FoundReport?   @relation(fields: [foundReportId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+
+  @@index([missingReportId])
+  @@index([foundReportId])
+}
+
+model ReportAudio {
+  id              String         @id @default(cuid())
+  url             String
+  durationSeconds Int?
+  missingReportId String?
+  missingReport   MissingReport? @relation(fields: [missingReportId], references: [id], onDelete: Cascade)
+  foundReportId   String?
+  foundReport     FoundReport?   @relation(fields: [foundReportId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+
+  @@index([missingReportId])
+  @@index([foundReportId])
+}
+
+model MatchSuggestion {
+  id              String      @id @default(cuid())
+  missingReportId String
+  foundReportId   String
+  missingReport   MissingReport @relation(fields: [missingReportId], references: [id])
+  foundReport     FoundReport   @relation(fields: [foundReportId], references: [id])
+  score           Float?
+  status          MatchStatus @default(PENDING)
+  suggestedById   String?
+  suggestedBy     User?       @relation("SuggestedMatches", fields: [suggestedById], references: [id], onDelete: SetNull)
+  reviewedById    String?
+  reviewedBy      User?       @relation("ReviewedMatches", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt      DateTime?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([missingReportId, foundReportId])
+  @@index([status])
+  @@index([missingReportId])
+  @@index([foundReportId])
+  @@index([suggestedById])
+}
+
+model AuditLog {
+  id              String         @id @default(cuid())
+  userId          String?
+  user            User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action          AuditAction
+  entityType      EntityType
+  entityId        String
+  missingReportId String?
+  missingReport   MissingReport? @relation(fields: [missingReportId], references: [id], onDelete: SetNull)
+  foundReportId   String?
+  foundReport     FoundReport?   @relation(fields: [foundReportId], references: [id], onDelete: SetNull)
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([missingReportId])
+  @@index([foundReportId])
+  @@index([createdAt])
+}
+
