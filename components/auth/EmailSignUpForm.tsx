@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 
 export function EmailSignUpForm() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,14 +31,14 @@ export function EmailSignUpForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Registration failed");
+        setError(data.error || t("auth.registrationFailed"));
         setLoading(false);
         return;
       }
 
       router.push("/signin?registered=email");
     } catch {
-      setError("Registration failed. Please try again.");
+      setError(t("auth.registrationRetry"));
       setLoading(false);
     }
   };
@@ -50,11 +52,11 @@ export function EmailSignUpForm() {
       )}
 
       <div>
-        <Label htmlFor="signup-name">Full name</Label>
+        <Label htmlFor="signup-name">{t("auth.fullName")}</Label>
         <Input
           id="signup-name"
           type="text"
-          placeholder="Your full name"
+          placeholder={t("auth.namePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoComplete="name"
@@ -62,11 +64,11 @@ export function EmailSignUpForm() {
       </div>
 
       <div>
-        <Label htmlFor="signup-email">Email address</Label>
+        <Label htmlFor="signup-email">{t("auth.email")}</Label>
         <Input
           id="signup-email"
           type="email"
-          placeholder="you@example.com"
+          placeholder={t("auth.emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -75,11 +77,11 @@ export function EmailSignUpForm() {
       </div>
 
       <div>
-        <Label htmlFor="signup-password">Password</Label>
+        <Label htmlFor="signup-password">{t("auth.password")}</Label>
         <Input
           id="signup-password"
           type="password"
-          placeholder="At least 8 characters"
+          placeholder={t("auth.passwordNewPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -89,7 +91,7 @@ export function EmailSignUpForm() {
       </div>
 
       <Button type="submit" className="w-full" loading={loading}>
-        Create account
+        {t("auth.createAccount")}
       </Button>
     </form>
   );

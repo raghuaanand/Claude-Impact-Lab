@@ -74,7 +74,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <span className="text-sm font-bold bg-white/10 px-4 py-2 rounded-full backdrop-blur-md transition-colors group-hover:bg-white/20">
-                View
+                {t("common.view")}
               </span>
             </Card>
           </Link>
@@ -107,8 +107,8 @@ export default function DashboardPage() {
 
         <section className="mt-10 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold tracking-tight text-khummela-text">Active Cases</h2>
-            <span className="text-xs font-bold text-khummela-muted">{cases.length} Total</span>
+            <h2 className="text-lg font-bold tracking-tight text-khummela-text">{t("dashboard.activeCases")}</h2>
+            <span className="text-xs font-bold text-khummela-muted">{t("dashboard.totalCount", { count: cases.length })}</span>
           </div>
           
           <SearchBar className="w-full" value={query} onChange={setQuery} />

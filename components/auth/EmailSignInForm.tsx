@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 
 export function EmailSignInForm() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +30,7 @@ export function EmailSignInForm() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError(t("auth.invalidEmailPassword"));
       return;
     }
 
@@ -45,11 +47,11 @@ export function EmailSignInForm() {
       )}
 
       <div>
-        <Label htmlFor="signin-email">Email address</Label>
+        <Label htmlFor="signin-email">{t("auth.email")}</Label>
         <Input
           id="signin-email"
           type="email"
-          placeholder="you@example.com"
+          placeholder={t("auth.emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -58,11 +60,11 @@ export function EmailSignInForm() {
       </div>
 
       <div>
-        <Label htmlFor="signin-password">Password</Label>
+        <Label htmlFor="signin-password">{t("auth.password")}</Label>
         <Input
           id="signin-password"
           type="password"
-          placeholder="Enter your password"
+          placeholder={t("auth.passwordPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -71,7 +73,7 @@ export function EmailSignInForm() {
       </div>
 
       <Button type="submit" className="w-full" loading={loading}>
-        Sign in
+        {t("common.signIn")}
       </Button>
     </form>
   );

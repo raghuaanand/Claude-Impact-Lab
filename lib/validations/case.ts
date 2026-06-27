@@ -1,20 +1,25 @@
 import { z } from "zod";
 
+const optionalText = z
+  .string()
+  .optional()
+  .transform((value) => (value?.trim() ? value.trim() : undefined));
+
 export const createCaseSchema = z.object({
   type: z.enum(["MISSING", "FOUND"]),
-  personName: z.string().optional(),
+  personName: optionalText,
   ageBand: z.string().min(1),
   gender: z.string().min(1),
-  language: z.string().optional(),
-  state: z.string().optional(),
-  district: z.string().optional(),
-  physicalDescription: z.string().optional(),
-  lastSeenText: z.string().optional(),
+  language: optionalText,
+  state: optionalText,
+  district: optionalText,
+  physicalDescription: optionalText,
+  lastSeenText: optionalText,
   lastSeenAt: z.string().datetime().optional(),
-  reportingCenter: z.string().optional(),
-  reporterPhone: z.string().optional(),
-  zoneId: z.string().optional(),
-  remarks: z.string().optional(),
+  reportingCenter: optionalText,
+  reporterPhone: optionalText,
+  zoneId: optionalText,
+  remarks: optionalText,
 });
 
 export const updateCaseSchema = z.object({

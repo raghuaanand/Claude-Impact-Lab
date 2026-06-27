@@ -9,6 +9,7 @@ import { CaseCard } from "@/components/ui/CaseCard";
 import { MatchCompare } from "@/components/ui/MatchCompare";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 import type { SafeCase } from "@/lib/case-access";
 
 type Analytics = {
@@ -29,6 +30,7 @@ type MatchRow = {
 
 export default function ManagementPage() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const role = session?.user?.role;
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [matches, setMatches] = useState<MatchRow[]>([]);
@@ -59,20 +61,20 @@ export default function ManagementPage() {
   }
 
   return (
-    <AppShell title="Command Center" role={role} showNav={false}>
+    <AppShell title={t("management.title")} role={role} showNav={false}>
       <div className="mx-auto max-w-6xl px-6 py-10">
         <header className="space-y-1">
-          <h1 className="text-3xl font-extrabold tracking-tight text-khummela-text md:text-4xl">Command Center</h1>
-          <p className="text-sm font-semibold text-khummela-muted leading-relaxed">Supervisor overview — all mela zones</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-khummela-text md:text-4xl">{t("management.title")}</h1>
+          <p className="text-sm font-semibold text-khummela-muted leading-relaxed">{t("management.subtitle")}</p>
         </header>
 
         {analytics && (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Active missing" value={analytics.activeMissing} />
-            <StatCard label="Found (open)" value={analytics.foundOpen} />
-            <StatCard label="Resolved" value={analytics.resolved} />
+            <StatCard label={t("management.activeMissing")} value={analytics.activeMissing} />
+            <StatCard label={t("management.foundOpen")} value={analytics.foundOpen} />
+            <StatCard label={t("management.resolved")} value={analytics.resolved} />
             <StatCard
-              label="Avg resolution"
+              label={t("management.avgResolution")}
               value={`${analytics.avgResolutionHours.toFixed(1)}h`}
             />
           </div>
@@ -80,13 +82,13 @@ export default function ManagementPage() {
 
         <section className="mt-12 border-t border-black/[0.05] pt-10">
           <header className="space-y-1">
-            <h2 className="text-xl font-bold tracking-tight text-khummela-text">Match Verification</h2>
-            <p className="text-xs font-semibold text-khummela-muted">Human review required — no auto-reunification</p>
+            <h2 className="text-xl font-bold tracking-tight text-khummela-text">{t("management.matchVerification")}</h2>
+            <p className="text-xs font-semibold text-khummela-muted">{t("management.matchVerificationHint")}</p>
           </header>
           <div className="mt-6 space-y-10">
             {matches.length === 0 ? (
               <Card className="text-center p-12 border border-black/[0.03] bg-white rounded-3xl text-sm font-bold text-khummela-muted/60">
-                No pending matches to verify
+                {t("management.noPendingMatches")}
               </Card>
             ) : (
               matches.map((m) => (
@@ -115,18 +117,11 @@ export default function ManagementPage() {
                     }}
                   />
                   <div className="mt-5 flex gap-4 max-w-md mx-auto">
-                    <Button
-                      className="flex-1"
-                      onClick={() => reviewMatch(m.id, "APPROVED")}
-                    >
-                      Approve reunification
+                    <Button className="flex-1" onClick={() => reviewMatch(m.id, "APPROVED")}>
+                      {t("management.approveReunification")}
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => reviewMatch(m.id, "REJECTED")}
-                    >
-                      Reject
+                    <Button variant="outline" className="flex-1" onClick={() => reviewMatch(m.id, "REJECTED")}>
+                      {t("common.reject")}
                     </Button>
                   </div>
                 </div>
@@ -137,7 +132,7 @@ export default function ManagementPage() {
 
         <section className="mt-12 border-t border-black/[0.05] pt-10">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-khummela-text">Missing Wall</h2>
+            <h2 className="text-xl font-bold tracking-tight text-khummela-text">{t("management.missingWall")}</h2>
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
@@ -146,7 +141,7 @@ export default function ManagementPage() {
                   !zoneFilter ? "bg-black text-white shadow-sm" : "bg-black/[0.04] text-khummela-muted hover:bg-black/[0.08]"
                 }`}
               >
-                All Zones
+                {t("management.allZones")}
               </button>
               {analytics?.byZone.slice(0, 8).map((z) => (
                 <button
@@ -171,7 +166,7 @@ export default function ManagementPage() {
 
         <p className="mt-12 text-center">
           <Link href="/dashboard" className="text-sm font-bold text-khummela-primary transition-colors hover:text-khummela-primary-dark">
-            ← Back to Dashboard
+            {t("nav.backToDashboard")}
           </Link>
         </p>
       </div>
