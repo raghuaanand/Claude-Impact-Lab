@@ -1,4 +1,8 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
+import { statusLabel } from "@/lib/i18n/status-label";
 
 const variants = {
   OPEN: "bg-blue-500/[0.08] text-blue-600 border border-blue-500/10",
@@ -19,6 +23,9 @@ type BadgeProps = {
 };
 
 export function Badge({ status, label, className }: BadgeProps) {
+  const { t } = useTranslation();
+  const text = label ?? statusLabel(t, status);
+
   return (
     <span
       className={cn(
@@ -27,8 +34,7 @@ export function Badge({ status, label, className }: BadgeProps) {
         className
       )}
     >
-      {label ?? status.replace(/_/g, " ")}
+      {text}
     </span>
   );
 }
-

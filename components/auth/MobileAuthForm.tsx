@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 
 type MobileSignInFormProps = {
   mode?: "signin" | "signup";
@@ -13,6 +14,7 @@ type MobileSignInFormProps = {
 
 export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -39,7 +41,7 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to send OTP");
+        setError(data.error || t("auth.otpSendFailed"));
         setSendingOtp(false);
         return;
       }
@@ -47,7 +49,7 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
       setOtpSent(true);
       setSendingOtp(false);
     } catch {
-      setError("Failed to send OTP. Please try again.");
+      setError(t("auth.otpSendRetry"));
       setSendingOtp(false);
     }
   };
@@ -67,7 +69,7 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
       setLoading(false);
 
       if (result?.error) {
-        setError("Invalid mobile number or password");
+        setError(t("auth.invalidMobilePassword"));
         return;
       }
 
@@ -85,7 +87,7 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid or expired OTP");
+      setError(t("auth.invalidOtp"));
       return;
     }
 
@@ -108,7 +110,7 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Registration failed");
+        setError(data.error || t("auth.registrationFailed"));
         setLoading(false);
         return;
       }
@@ -129,7 +131,7 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Registration failed. Please try again.");
+      setError(t("auth.registrationRetry"));
       setLoading(false);
     }
   };
@@ -146,11 +148,11 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
 
       {mode === "signup" && (
         <div>
-          <Label htmlFor="mobile-name">Full name</Label>
+          <Label htmlFor="mobile-name">{t("auth.fullName")}</Label>
           <Input
             id="mobile-name"
             type="text"
-            placeholder="Your full name"
+            placeholder={t("auth.namePlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
@@ -159,11 +161,11 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
       )}
 
       <div>
-        <Label htmlFor="mobile-number">Mobile number</Label>
+        <Label htmlFor="mobile-number">{t("auth.mobileNumber")}</Label>
         <Input
           id="mobile-number"
           type="tel"
-          placeholder="+91 98765 43210"
+          placeholder={t("auth.mobilePlaceholder")}
           value={mobile}
           onChange={(e) => {
             setMobile(e.target.value);
@@ -185,7 +187,7 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
                 : "bg-khummela-surface text-khummela-muted hover:text-khummela-text"
             }`}
           >
-            Password
+            {t("auth.password")}
           </button>
           <button
             type="button"
@@ -196,18 +198,18 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
                 : "bg-khummela-surface text-khummela-muted hover:text-khummela-text"
             }`}
           >
-            OTP
+            {t("auth.otp")}
           </button>
         </div>
       )}
 
       {(mode === "signup" || authMethod === "password") && (
         <div>
-          <Label htmlFor="mobile-password">Password</Label>
+          <Label htmlFor="mobile-password">{t("auth.password")}</Label>
           <Input
             id="mobile-password"
             type="password"
-            placeholder="At least 8 characters"
+            placeholder={t("auth.passwordNewPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -219,12 +221,12 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
 
       {(mode === "signup" || authMethod === "otp") && (
         <div>
-          <Label htmlFor="mobile-otp">Verification code</Label>
+          <Label htmlFor="mobile-otp">{t("auth.verificationCode")}</Label>
           <div className="flex gap-2">
             <Input
               id="mobile-otp"
               type="text"
-              placeholder="6-digit code"
+              placeholder={t("auth.otpPlaceholder")}
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               required
@@ -240,19 +242,17 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
               disabled={!mobile}
               className="shrink-0"
             >
-              {otpSent ? "Resend" : "Send OTP"}
+              {otpSent ? t("auth.resendOtp") : t("auth.sendOtp")}
             </Button>
           </div>
           {otpSent && (
-            <p className="mt-1.5 text-xs text-khummela-muted">
-              OTP sent. Check your phone (or server console in dev mode).
-            </p>
+            <p className="mt-1.5 text-xs text-khummela-muted">{t("auth.otpSent")}</p>
           )}
         </div>
       )}
 
       <Button type="submit" className="w-full" loading={loading}>
-        {mode === "signup" ? "Create account" : "Sign in"}
+        {mode === "signup" ? t("auth.createAccount") : t("common.signIn")}
       </Button>
     </form>
   );

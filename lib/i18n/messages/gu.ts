@@ -1,6 +1,6 @@
-import type { Messages } from "./en";
+import type { Messages, DeepPartial } from "./en";
 
-export const gu: Messages = {
+export const gu: DeepPartial<Messages> = {
   common: {
     appName: "સંગમ કનેક્ટ",
     brandKhummela: "ખુમ્મેલા",

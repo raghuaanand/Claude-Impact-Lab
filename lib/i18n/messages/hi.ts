@@ -1,6 +1,6 @@
-import type { Messages } from "./en";
+import type { Messages, DeepPartial } from "./en";
 
-export const hi: Messages = {
+export const hi: DeepPartial<Messages> = {
   common: {
     appName: "संगम कनेक्ट",
     brandKhummela: "खुम्मेला",
@@ -63,6 +63,10 @@ export const hi: Messages = {
     secure: "सुरक्षित",
     secureLabel: "सुरक्षित डेटा",
     footerTagline: "हर व्यक्ति महत्वपूर्ण है। हर खोज मायने रखती है।",
+  },
+  meta: {
+    title: "खुम्मेला — गुम व्यक्ति पहचान",
+    description: "खुम्मेला समुदायों को गुम व्यक्तियों की पहचान और खोज में मदद करता है। मिलकर हम आशा ढूँढते हैं।",
   },
   roles: {
     FAMILY: "परिवार",

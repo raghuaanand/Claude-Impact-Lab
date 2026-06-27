@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
+import { statusLabel } from "@/lib/i18n/status-label";
 
 type CctvAlertRow = {
   id: string;
@@ -22,6 +24,7 @@ type CctvAlertListProps = {
 };
 
 export function CctvAlertList({ caseId, caseType, canDispatch }: CctvAlertListProps) {
+  const { t } = useTranslation();
   const [alerts, setAlerts] = useState<CctvAlertRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dispatching, setDispatching] = useState(false);
@@ -51,12 +54,12 @@ export function CctvAlertList({ caseId, caseType, canDispatch }: CctvAlertListPr
     if (res.ok) {
       setMessage(
         data.alerted > 0
-          ? `Alert sent to ${data.alerted} nearby camera(s).`
-          : "All nearby cameras already alerted."
+          ? t("cctv.alertSent", { count: data.alerted })
+          : t("cctv.alreadyAlerted")
       );
       loadAlerts();
     } else {
-      setMessage(data.error ?? "Could not send CCTV alerts");
+      setMessage(data.error ?? t("cctv.dispatchFailed"));
     }
   }
 
@@ -66,33 +69,22 @@ export function CctvAlertList({ caseId, caseType, canDispatch }: CctvAlertListPr
     <Card className="mt-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">CCTV lookout</h2>
-          <p className="mt-1 text-sm text-khummela-muted">
-            Nearby cameras around the last-seen zone are asked to review footage for this person.
-          </p>
+          <h2 className="text-lg font-semibold">{t("cctv.title")}</h2>
+          <p className="mt-1 text-sm text-khummela-muted">{t("cctv.description")}</p>
         </div>
         {canDispatch && (
-          <Button
-            size="sm"
-            variant="secondary"
-            loading={dispatching}
-            onClick={dispatchAlerts}
-          >
-            {alerts.length > 0 ? "Re-alert cameras" : "Alert nearby CCTV"}
+          <Button size="sm" variant="secondary" loading={dispatching} onClick={dispatchAlerts}>
+            {alerts.length > 0 ? t("cctv.reAlert") : t("cctv.alertNearby")}
           </Button>
         )}
       </div>
 
-      {message && (
-        <p className="mt-3 text-sm text-khummela-accent">{message}</p>
-      )}
+      {message && <p className="mt-3 text-sm text-khummela-accent">{message}</p>}
 
       {loading ? (
-        <p className="mt-4 text-sm text-khummela-muted">Loading camera alerts…</p>
+        <p className="mt-4 text-sm text-khummela-muted">{t("cctv.loading")}</p>
       ) : alerts.length === 0 ? (
-        <p className="mt-4 text-sm text-khummela-muted">
-          No CCTV alerts yet. Supervisors can trigger alerts to cameras within ~500 m of the last-seen zone.
-        </p>
+        <p className="mt-4 text-sm text-khummela-muted">{t("cctv.empty")}</p>
       ) : (
         <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
           {alerts.map((a) => (
@@ -103,36 +95,14 @@ export function CctvAlertList({ caseId, caseType, canDispatch }: CctvAlertListPr
               <div>
                 <p className="font-mono font-medium">{a.cameraId}</p>
                 <p className="text-xs text-khummela-muted">
-                  {a.zoneName} · {a.distanceMeters} m from last-seen area
+                  {t("cctv.distanceFrom", { zone: a.zoneName, meters: a.distanceMeters })}
                 </p>
               </div>
-              <CctvStatusBadge status={a.status} />
+              <Badge status="OPEN" label={statusLabel(t, a.status)} />
             </li>
           ))}
         </ul>
       )}
     </Card>
   );
-}
-
-function CctvStatusBadge({ status }: { status: string }) {
-  const variant =
-    status === "SENT" || status === "ACKNOWLEDGED"
-      ? "OPEN"
-      : status === "REVIEWED"
-        ? "RESOLVED"
-        : "MATCH_PENDING";
-
-  const label =
-    status === "SENT"
-      ? "Sent"
-      : status === "ACKNOWLEDGED"
-        ? "Ack"
-        : status === "REVIEWED"
-          ? "Reviewed"
-          : status === "PENDING"
-            ? "Pending"
-            : status;
-
-  return <Badge status={variant} label={label} />;
 }

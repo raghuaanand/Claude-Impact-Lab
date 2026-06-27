@@ -1,6 +1,6 @@
-import type { Messages } from "./en";
+import type { Messages, DeepPartial } from "./en";
 
-export const te: Messages = {
+export const te: DeepPartial<Messages> = {
   common: {
     appName: "సంగమ్ కనెక్ట్",
     brandKhummela: "ఖుమ్మేలా",

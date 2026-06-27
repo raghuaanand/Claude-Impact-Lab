@@ -133,7 +133,7 @@ export default function ReportStatusPage() {
                     <Badge status={c.status as "OPEN"} />
                   </div>
                   <p className="mt-2 text-xs font-semibold text-khummela-muted">
-                    {c.personName ?? "Unknown Name"} · {c.zoneName || "Main Arena"}
+                    {c.personName ?? t("common.unknownName")} · {c.zoneName || t("status.mainArena")}
                   </p>
                 </Card>
               ))}
@@ -189,23 +189,23 @@ export default function ReportStatusPage() {
             <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-khummela-muted pt-2">
               {result.personName && (
                 <div>
-                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Person Name</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">{t("status.personName")}</span>
                   <span className="text-khummela-text text-sm font-bold block mt-0.5">{result.personName}</span>
                 </div>
               )}
               <div>
-                <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Demographics</span>
-                <span className="text-khummela-text text-sm font-bold block mt-0.5">{result.ageBand} yrs · {result.gender}</span>
+                <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">{t("status.demographics")}</span>
+                <span className="text-khummela-text text-sm font-bold block mt-0.5">{result.ageBand} {t("common.years")} · {result.gender}</span>
               </div>
               {result.zoneName && (
                 <div>
-                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Mela Zone</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">{t("status.melaZone")}</span>
                   <span className="text-khummela-text text-sm font-bold block mt-0.5">{result.zoneName}</span>
                 </div>
               )}
               {result.lastSeenText && (
                 <div>
-                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Last Seen</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">{t("status.lastSeen")}</span>
                   <span className="text-khummela-text text-sm font-bold block mt-0.5 truncate">{result.lastSeenText}</span>
                 </div>
               )}
@@ -213,7 +213,7 @@ export default function ReportStatusPage() {
             
             {result.resolutionHours != null && (
               <div className="mt-4 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/10 p-3 text-center text-xs font-bold text-emerald-600">
-                Reunified in {result.resolutionHours.toFixed(1)} hours
+                {t("status.reunifiedIn", { hours: result.resolutionHours.toFixed(1) })}
               </div>
             )}
           </Card>

@@ -156,12 +156,20 @@ export function ReportWizard({ type }: ReportWizardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, ...form }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message ?? "Failed to submit");
+      const raw = await res.text();
+      const data = raw ? (JSON.parse(raw) as { error?: string | { message?: string }; case?: { id: string; caseRef: string } }) : {};
+      if (!res.ok) {
+        const message =
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message ?? t("report.submitFailed");
+        throw new Error(message);
+      }
+      if (!data.case) throw new Error(t("report.submitFailed"));
       setDoneRef(data.case.caseRef);
       if (photoFile) await uploadPhoto(data.case.id);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : t("report.somethingWrong"));
     } finally {
       setLoading(false);
     }
@@ -177,8 +185,8 @@ export function ReportWizard({ type }: ReportWizardProps) {
             </svg>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">{t("report.caseCreated")}</p>
-            <h2 className="text-2xl font-extrabold text-khummela-text mt-1">{t("report.caseCreated")}</h2>
+            <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">{t("report.registrationComplete")}</p>
+            <h2 className="text-2xl font-extrabold text-khummela-text mt-1">{t("report.caseCreatedTitle")}</h2>
           </div>
           
           <div className="bg-black/[0.02] border border-black/[0.04] p-6 rounded-2xl">
@@ -187,11 +195,11 @@ export function ReportWizard({ type }: ReportWizardProps) {
           </div>
 
           <p className="text-xs font-medium leading-relaxed text-khummela-muted max-w-sm mx-auto">
-            Show this reference number to the help desk coordinators. The details are now shared across all active search kiosks.
+            {t("report.successNote")}
           </p>
 
           <Button className="w-full mt-4" size="md" onClick={() => router.push("/")}>
-            Return to Dashboard
+            {t("report.returnDashboard")}
           </Button>
         </Card>
       </div>
@@ -202,14 +210,14 @@ export function ReportWizard({ type }: ReportWizardProps) {
     <div className="mx-auto max-w-lg px-6 py-10 pb-32">
       <div className="mb-6 flex items-center justify-between">
         <span className="text-xs font-bold uppercase tracking-wider text-khummela-muted">
-          Report {type === "MISSING" ? "Missing Case" : "Found Person"}
+          {type === "MISSING" ? t("report.reportTypeMissing") : t("report.reportTypeFound")}
         </span>
         <button
           type="button"
           onClick={() => router.push("/")}
           className="text-xs font-bold text-rose-500 hover:opacity-85 transition-opacity"
         >
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
 
@@ -218,17 +226,17 @@ export function ReportWizard({ type }: ReportWizardProps) {
           {step === 0 && (
             <div className="space-y-5">
               <div>
-                <Label htmlFor="personName">Person&apos;s Full Name</Label>
+                <Label htmlFor="personName">{t("report.personsFullName")}</Label>
                 <Input
                   id="personName"
                   className="mt-2 h-11"
                   value={form.personName}
                   onChange={(e) => update({ personName: e.target.value })}
-                  placeholder="Leave blank if unknown"
+                  placeholder={t("report.nameUnknownPlaceholder")}
                 />
               </div>
               <div>
-                <Label>Age Bracket</Label>
+                <Label>{t("report.ageBracket")}</Label>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {AGE_BANDS.map((b) => (
                     <button
@@ -247,7 +255,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
                 </div>
               </div>
               <div>
-                <Label>Gender</Label>
+                <Label>{t("report.gender")}</Label>
                 <div className="mt-2.5 flex gap-2">
                   {GENDERS.map((g) => (
                     <button
@@ -260,7 +268,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
                           : "bg-black/[0.03] border-black/[0.05] text-khummela-text hover:bg-black/[0.06]"
                       }`}
                     >
-                      {g}
+                      {t(`report.genders.${g}` as "report.genders.Male")}
                     </button>
                   ))}
                 </div>
@@ -271,7 +279,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <Label>Assigned Arena / Zone</Label>
+                <Label>{t("report.assignedZone")}</Label>
                 <div className="mt-2 max-h-56 space-y-1.5 overflow-y-auto pr-1 border border-black/[0.05] rounded-xl p-2 bg-black/[0.01]">
                   {zones.map((z) => (
                     <button
@@ -291,13 +299,13 @@ export function ReportWizard({ type }: ReportWizardProps) {
                 </div>
               </div>
               <div>
-                <Label htmlFor="lastSeenText">Last Seen Specifics</Label>
+                <Label htmlFor="lastSeenText">{t("report.lastSeenSpecifics")}</Label>
                 <Input
                   id="lastSeenText"
                   className="mt-2 h-11"
                   value={form.lastSeenText}
                   onChange={(e) => update({ lastSeenText: e.target.value })}
-                  placeholder="e.g. Near Ramkund Ghat / Food Stalls"
+                  placeholder={t("report.lastSeenPlaceholder")}
                 />
               </div>
             </div>
@@ -306,7 +314,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
           {step === 2 && (
             <div className="space-y-5">
               <div>
-                <Label>Primary Speaking Language</Label>
+                <Label>{t("report.primaryLanguage")}</Label>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {LANGUAGES.map((l) => (
                     <button
@@ -326,7 +334,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
               </div>
               <div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="description">Physical Description</Label>
+                  <Label htmlFor="description">{t("report.physicalDescription")}</Label>
                   <button
                     type="button"
                     onClick={handleVoice}
@@ -349,7 +357,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
                   rows={4}
                   value={form.physicalDescription}
                   onChange={(e) => update({ physicalDescription: e.target.value })}
-                  placeholder="Describe clothing, height, visible features..."
+                  placeholder={t("report.descriptionPlaceholder")}
                 />
               </div>
             </div>
@@ -372,36 +380,36 @@ export function ReportWizard({ type }: ReportWizardProps) {
               {type === "MISSING" ? (
                 <>
                   <div>
-                    <Label htmlFor="reporterPhone">Reporter Mobile Number</Label>
+                    <Label htmlFor="reporterPhone">{t("report.reporterMobile")}</Label>
                     <Input
                       id="reporterPhone"
                       className="mt-2 h-11"
                       type="tel"
                       value={form.reporterPhone}
                       onChange={(e) => update({ reporterPhone: e.target.value })}
-                      placeholder="+91 XXXXX XXXXX"
+                      placeholder={t("auth.mobilePlaceholder")}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="reportingCenter">Kiosk / Help Desk Name</Label>
+                    <Label htmlFor="reportingCenter">{t("report.kioskName")}</Label>
                     <Input
                       id="reportingCenter"
                       className="mt-2 h-11"
                       value={form.reportingCenter}
                       onChange={(e) => update({ reportingCenter: e.target.value })}
-                      placeholder="e.g. Center Gate 3"
+                      placeholder={t("report.kioskPlaceholder")}
                     />
                   </div>
                 </>
               ) : (
                 <div>
-                  <Label htmlFor="reportingCenter">Current Safe Location</Label>
+                  <Label htmlFor="reportingCenter">{t("report.safeLocation")}</Label>
                   <Input
                     id="reportingCenter"
                     className="mt-2 h-11"
                     value={form.reportingCenter}
                     onChange={(e) => update({ reportingCenter: e.target.value })}
-                    placeholder="Where the person is safely waiting"
+                    placeholder={t("report.safeLocationPlaceholder")}
                   />
                 </div>
               )}

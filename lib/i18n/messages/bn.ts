@@ -1,7 +1,7 @@
-import type { Messages } from "./en";
+import type { Messages, DeepPartial } from "./en";
 
-/** Bengali — full UI translations */
-export const bn: Messages = {
+/** Bengali — UI translations */
+export const bn: DeepPartial<Messages> = {
   common: {
     appName: "সংগম কানেক্ট",
     brandKhummela: "খুম্মেলা",

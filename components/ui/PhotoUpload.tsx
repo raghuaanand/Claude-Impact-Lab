@@ -2,6 +2,7 @@
 
 import { Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 
 type PhotoUploadProps = {
   preview?: string | null;
@@ -10,6 +11,7 @@ type PhotoUploadProps = {
 };
 
 export function PhotoUpload({ preview, onFileSelect, className }: PhotoUploadProps) {
+  const { t } = useTranslation();
   return (
     <label
       className={cn(
@@ -20,12 +22,12 @@ export function PhotoUpload({ preview, onFileSelect, className }: PhotoUploadPro
     >
       {preview ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="Preview" className="h-full w-full rounded-2xl object-cover" />
+        <img src={preview} alt={t("photo.preview")} className="h-full w-full rounded-2xl object-cover" />
       ) : (
         <>
           <Camera className="h-8 w-8 text-khummela-accent" />
-          <span className="mt-2 text-sm font-medium text-khummela-text">Add photo</span>
-          <span className="text-xs text-khummela-muted">Tap to capture or upload</span>
+          <span className="mt-2 text-sm font-medium text-khummela-text">{t("photo.addPhoto")}</span>
+          <span className="text-xs text-khummela-muted">{t("photo.tapToUpload")}</span>
         </>
       )}
       <input

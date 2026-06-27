@@ -1,8 +1,11 @@
+"use client";
+
 import { cn } from "@/lib/utils";
-import { roleLabel } from "@/lib/roles";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 import type { Role } from "@/app/generated/prisma/client";
 
 export function RoleBadge({ role, className }: { role: Role; className?: string }) {
+  const { t } = useTranslation();
   const colors: Record<Role, string> = {
     FAMILY: "bg-khummela-hope/10 text-khummela-hope",
     VOLUNTEER: "bg-black/[0.04] text-khummela-muted",
@@ -18,7 +21,7 @@ export function RoleBadge({ role, className }: { role: Role; className?: string 
         className
       )}
     >
-      {roleLabel(role)}
+      {t(`roles.${role}`)}
     </span>
   );
 }

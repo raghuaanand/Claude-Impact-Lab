@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { getLocale } from "@/lib/i18n/server";
+import { getMessages } from "@/lib/i18n/messages";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,11 +15,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "KHUMMELA — Missing Persons Identification",
-  description:
-    "KHUMMELA helps communities identify and locate missing persons. Together we find hope.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const m = getMessages(locale);
+  return {
+    title: m.meta.title,
+    description: m.meta.description,
+  };
+}
 
 export default async function RootLayout({
   children,

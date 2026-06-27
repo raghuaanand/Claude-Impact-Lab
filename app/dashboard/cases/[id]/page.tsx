@@ -11,12 +11,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CctvAlertList } from "@/components/cctv/CctvAlertList";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 import type { SafeCase } from "@/lib/case-access";
 
 export default function CaseDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const id = params.id as string;
   const role = session?.user?.role;
   const isSupervisor = role === "SUPERVISOR" || role === "POLICE";
@@ -51,19 +53,17 @@ export default function CaseDetailPage() {
     if (res.ok) {
       setActionMsg(
         data.matches?.length
-          ? `Found ${data.matches.length} possible match(es). Check Command Center.`
-          : "No matches above threshold. Try adding more description details."
+          ? t("caseDetail.matchesFound", { count: data.matches.length })
+          : t("caseDetail.noMatches")
       );
       reload();
     } else {
-      setActionMsg(data.error ?? "Recompute failed");
+      setActionMsg(data.error ?? t("caseDetail.recomputeFailed"));
     }
   }
 
   async function markResolved() {
-    if (!confirm("Mark this case as resolved without a match? Use only if reunification already happened on the ground.")) {
-      return;
-    }
+    if (!confirm(t("caseDetail.confirmResolved"))) return;
     setBusy(true);
     const res = await fetch(`/api/cases/${id}`, {
       method: "PATCH",
@@ -72,22 +72,16 @@ export default function CaseDetailPage() {
     });
     setBusy(false);
     if (res.ok) {
-      setActionMsg("Case marked resolved");
+      setActionMsg(t("caseDetail.markedResolved"));
       reload();
     } else {
       const data = await res.json();
-      setActionMsg(data.error ?? "Could not resolve");
+      setActionMsg(data.error ?? t("caseDetail.resolveFailed"));
     }
   }
 
   async function markTransferred() {
-    if (
-      !confirm(
-        "Mark this case as transferred to a hospital or medical facility? The case will no longer appear as active on the dashboard."
-      )
-    ) {
-      return;
-    }
+    if (!confirm(t("caseDetail.confirmTransferred"))) return;
     setBusy(true);
     const res = await fetch(`/api/cases/${id}`, {
       method: "PATCH",
@@ -96,11 +90,11 @@ export default function CaseDetailPage() {
     });
     setBusy(false);
     if (res.ok) {
-      setActionMsg("Case marked as transferred to hospital");
+      setActionMsg(t("caseDetail.markedTransferred"));
       reload();
     } else {
       const data = await res.json();
-      setActionMsg(data.error ?? "Could not update case");
+      setActionMsg(data.error ?? t("caseDetail.updateFailed"));
     }
   }
 
@@ -120,24 +114,29 @@ export default function CaseDetailPage() {
     return (
       <AppShell role={role}>
         <div className="mx-auto max-w-4xl px-6 py-16 text-center">
-          <p className="text-sm font-bold text-khummela-muted">Case not found</p>
+          <p className="text-sm font-bold text-khummela-muted">{t("caseDetail.notFound")}</p>
         </div>
         <BottomNav />
       </AppShell>
     );
   }
 
+  const caseTypeLabel =
+    caseRecord.type === "MISSING"
+      ? t("caseDetail.types.MISSING")
+      : t("caseDetail.types.FOUND");
+
   return (
     <AppShell role={role}>
       <div className="mx-auto max-w-4xl px-6 py-10 lg:max-w-6xl">
         <Link href="/dashboard" className="text-xs font-bold text-khummela-primary transition-colors hover:text-khummela-primary-dark">
-          ← Back to Dashboard
+          {t("nav.backToDashboard")}
         </Link>
-        
+
         <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-khummela-text md:text-4xl">
-              {caseRecord.personName || "Unknown Name"}
+              {caseRecord.personName || t("common.unknownName")}
             </h1>
             <p className="font-mono text-xs font-bold uppercase tracking-wider text-khummela-muted mt-1">{caseRecord.caseRef}</p>
           </div>
@@ -145,16 +144,11 @@ export default function CaseDetailPage() {
         </div>
 
         <div className="mt-8 grid gap-8 md:grid-cols-2">
-          {/* Column Left: Photo Frame */}
           <div className="space-y-6">
             <div className="aspect-[4/3] w-full overflow-hidden rounded-[24px] bg-black/[0.02] border border-black/[0.04] shadow-[0_6px_20px_rgba(0,0,0,0.015)]">
               {caseRecord.media[0] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={caseRecord.media[0].cdnUrl}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={caseRecord.media[0].cdnUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-7xl font-extrabold text-khummela-muted/30">
                   {(caseRecord.personName?.[0] ?? "?").toUpperCase()}
@@ -162,38 +156,39 @@ export default function CaseDetailPage() {
               )}
             </div>
 
-            <CctvAlertList
-              caseId={caseRecord.id}
-              caseType={caseRecord.type}
-              canDispatch={isSupervisor}
-            />
+            <CctvAlertList caseId={caseRecord.id} caseType={caseRecord.type} canDispatch={isSupervisor} />
           </div>
 
-          {/* Column Right: Attributes Table */}
           <div className="space-y-6">
             <Card className="p-6 border border-black/[0.03] bg-white rounded-[24px] space-y-4">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-khummela-muted border-b border-black/[0.03] pb-3">Case Specifications</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-khummela-muted border-b border-black/[0.03] pb-3">
+                {t("caseDetail.specifications")}
+              </h2>
               <div className="grid grid-cols-2 gap-4">
-                <Row label="Type" value={caseRecord.type} />
-                <Row label="Age" value={caseRecord.ageBand} />
-                <Row label="Gender" value={caseRecord.gender} />
-                <Row label="Language" value={caseRecord.language} />
-                <Row label="Zone" value={caseRecord.zoneName} />
-                <Row label="Last seen" value={caseRecord.lastSeenText} />
-                <Row label="Center" value={caseRecord.reportingCenter} />
+                <Row label={t("caseDetail.type")} value={caseTypeLabel} />
+                <Row label={t("caseDetail.age")} value={caseRecord.ageBand} />
+                <Row label={t("caseDetail.gender")} value={caseRecord.gender} />
+                <Row label={t("caseDetail.language")} value={caseRecord.language} />
+                <Row label={t("caseDetail.zone")} value={caseRecord.zoneName} />
+                <Row label={t("caseDetail.lastSeen")} value={caseRecord.lastSeenText} />
+                <Row label={t("caseDetail.center")} value={caseRecord.reportingCenter} />
                 {caseRecord.reporterPhone && (
-                  <Row label="Contact" value={caseRecord.reporterPhone} />
+                  <Row label={t("caseDetail.contact")} value={caseRecord.reporterPhone} />
                 )}
               </div>
               {caseRecord.physicalDescription && (
                 <div className="border-t border-black/[0.03] pt-4">
-                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Physical Description</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">
+                    {t("caseDetail.physicalDescription")}
+                  </span>
                   <p className="text-xs text-khummela-text font-semibold mt-1.5 leading-relaxed">{caseRecord.physicalDescription}</p>
                 </div>
               )}
               {caseRecord.remarks && isSupervisor && (
                 <div className="border-t border-black/[0.03] pt-4">
-                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">Supervisor Remarks</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-khummela-muted/75 font-bold">
+                    {t("caseDetail.supervisorRemarks")}
+                  </span>
                   <p className="text-xs text-khummela-text font-semibold mt-1.5 leading-relaxed">{caseRecord.remarks}</p>
                 </div>
               )}
@@ -206,55 +201,30 @@ export default function CaseDetailPage() {
             )}
 
             <div className="space-y-3">
-              {caseRecord.type === "FOUND" &&
-                ["OPEN", "MATCH_PENDING"].includes(caseRecord.status) && (
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    loading={busy}
-                    onClick={recomputeMatches}
-                  >
-                    Run Match Search
-                  </Button>
-                )}
+              {caseRecord.type === "FOUND" && ["OPEN", "MATCH_PENDING"].includes(caseRecord.status) && (
+                <Button className="w-full" size="lg" loading={busy} onClick={recomputeMatches}>
+                  {t("caseDetail.runMatchSearch")}
+                </Button>
+              )}
 
               {caseRecord.status === "MATCH_PENDING" && isSupervisor && (
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={() => router.push("/management")}
-                >
-                  Review Matches in Command Center
+                <Button className="w-full" size="lg" onClick={() => router.push("/management")}>
+                  {t("caseDetail.reviewInCommand")}
                 </Button>
               )}
 
               {canUpdateCaseStatus &&
-                !["RESOLVED", "DUPLICATE", "TRANSFERRED", "UNRESOLVED"].includes(
-                  caseRecord.status
-                ) && (
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    variant="outline"
-                    loading={busy}
-                    onClick={markTransferred}
-                  >
-                    Mark as Transferred to Hospital
+                !["RESOLVED", "DUPLICATE", "TRANSFERRED", "UNRESOLVED"].includes(caseRecord.status) && (
+                  <Button className="w-full" size="lg" variant="outline" loading={busy} onClick={markTransferred}>
+                    {t("caseDetail.markTransferred")}
                   </Button>
                 )}
 
-              {isSupervisor &&
-                !["RESOLVED", "DUPLICATE", "TRANSFERRED"].includes(caseRecord.status) && (
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    variant="outline"
-                    loading={busy}
-                    onClick={markResolved}
-                  >
-                    Mark as Resolved (Manual)
-                  </Button>
-                )}
+              {isSupervisor && !["RESOLVED", "DUPLICATE", "TRANSFERRED"].includes(caseRecord.status) && (
+                <Button className="w-full" size="lg" variant="outline" loading={busy} onClick={markResolved}>
+                  {t("caseDetail.markResolved")}
+                </Button>
+              )}
             </div>
           </div>
         </div>
