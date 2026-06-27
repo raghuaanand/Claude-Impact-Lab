@@ -49,6 +49,14 @@ enum MelaLocationCategory {
   PARKING_BELT
 }
 
+enum CctvAlertStatus {
+  PENDING
+  SENT
+  ACKNOWLEDGED
+  REVIEWED
+  CANCELLED
+}
+
 model User {
   id             String    @id @default(cuid())
   name           String?
@@ -136,14 +144,33 @@ model Zone {
 }
 
 model CctvLocation {
-  id       String @id @default(cuid())
-  cameraId String @unique
+  id       String      @id @default(cuid())
+  cameraId String      @unique
   lat      Float
   lng      Float
   zoneId   String
-  zone     Zone   @relation(fields: [zoneId], references: [id])
+  zone     Zone        @relation(fields: [zoneId], references: [id])
+  alerts   CctvAlert[]
 
   @@index([zoneId])
+}
+
+model CctvAlert {
+  id              String          @id @default(cuid())
+  caseId          String
+  case            Case            @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  cctvLocationId  String
+  cctvLocation    CctvLocation    @relation(fields: [cctvLocationId], references: [id])
+  status          CctvAlertStatus @default(PENDING)
+  distanceMeters  Float
+  message         String
+  sentAt          DateTime?
+  createdAt       DateTime        @default(now())
+
+  @@unique([caseId, cctvLocationId])
+  @@index([caseId])
+  @@index([cctvLocationId])
+  @@index([status])
 }
 
 model PoliceStation {
@@ -198,6 +225,7 @@ model Case {
   missingMatches     Match[]         @relation("MissingCase")
   foundMatches       Match[]         @relation("FoundCase")
   reunifications     Reunification[]
+  cctvAlerts         CctvAlert[]
 
   @@index([type, status, zoneId])
   @@index([reportingCenter])

@@ -29,8 +29,11 @@ export async function POST(request: Request) {
 
       if (!user) {
         return NextResponse.json(
-          { error: "No account found with this mobile number" },
-          { status: 404 }
+          {
+            error:
+              "No account found with this mobile number. Sign up first or check the number.",
+          },
+          { status: 400 }
         );
       }
     }

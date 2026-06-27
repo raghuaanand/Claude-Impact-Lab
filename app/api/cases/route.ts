@@ -5,6 +5,7 @@ import { createCaseSchema } from "@/lib/validations/case";
 import { redactCase } from "@/lib/case-access";
 import { generateCaseRef } from "@/lib/cases";
 import { detectDuplicateFlags, findMatches } from "@/lib/matching";
+import { dispatchCctvAlertsForCase } from "@/lib/cctv-dispatch";
 import type { Prisma, Role } from "@/app/generated/prisma/client";
 
 export async function GET(req: NextRequest) {
@@ -152,6 +153,17 @@ export async function POST(req: NextRequest) {
       });
       created.status = "MATCH_PENDING";
     }
+  }
+
+  if (
+    data.type === "MISSING" &&
+    !duplicateOf &&
+    data.zoneId &&
+    created.status !== "DUPLICATE"
+  ) {
+    void dispatchCctvAlertsForCase(created.id).catch((err) => {
+      console.error("[KHUMMELA CCTV] Auto-dispatch failed:", err);
+    });
   }
 
   return NextResponse.json({ case: redactCase(created, role) }, { status: 201 });

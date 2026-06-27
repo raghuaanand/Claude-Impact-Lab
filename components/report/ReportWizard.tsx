@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -10,14 +10,16 @@ import { PhotoUpload } from "@/components/ui/PhotoUpload";
 import { Card } from "@/components/ui/Card";
 import {
   extractDescriptors,
-  listenForSpeech,
+  transcribeAudio,
   voiceCaptureErrorMessage,
+  REPORT_LANGUAGES,
 } from "@/lib/voice/intake";
+import { startAudioCapture, type AudioCaptureSession } from "@/lib/voice/capture";
 import { Mic } from "lucide-react";
 
 const AGE_BANDS = ["0-12", "13-17", "18-40", "41-60", "61-70", "71-80", "80+"];
 const GENDERS = ["Male", "Female", "Unknown"];
-const LANGUAGES = ["Hindi", "English", "Marathi", "Bengali", "Tamil", "Telugu", "Gujarati"];
+const LANGUAGES = [...REPORT_LANGUAGES];
 
 type Zone = { id: string; name: string; code: string };
 
@@ -40,6 +42,8 @@ export function ReportWizard({ type }: ReportWizardProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [doneRef, setDoneRef] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const captureRef = useRef<AudioCaptureSession | null>(null);
 
   const [form, setForm] = useState({
     personName: "",
@@ -65,11 +69,24 @@ export function ReportWizard({ type }: ReportWizardProps) {
   const update = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
 
   async function handleVoice() {
-    if (listening) return;
+    if (transcribing) return;
+
+    if (listening && captureRef.current) {
+      captureRef.current.stop();
+      return;
+    }
+
     setError("");
     setListening(true);
+    const capture = startAudioCapture(25_000);
+    captureRef.current = capture;
+
     try {
-      const text = await listenForSpeech(form.language);
+      const blob = await capture.done;
+      setListening(false);
+      setTranscribing(true);
+
+      const text = await transcribeAudio(blob, form.language);
       const extracted = extractDescriptors(text);
       update({
         physicalDescription: text,
@@ -86,6 +103,8 @@ export function ReportWizard({ type }: ReportWizardProps) {
       if (message) setError(message);
     } finally {
       setListening(false);
+      setTranscribing(false);
+      captureRef.current = null;
     }
   }
 
@@ -263,13 +282,17 @@ export function ReportWizard({ type }: ReportWizardProps) {
                 <button
                   type="button"
                   onClick={handleVoice}
-                  disabled={listening}
+                  disabled={transcribing}
                   className={`flex items-center gap-1 text-sm ${
-                    listening ? "text-khummela-muted" : "text-khummela-accent"
+                    listening || transcribing ? "text-khummela-muted" : "text-khummela-accent"
                   }`}
                 >
                   <Mic className={`h-4 w-4 ${listening ? "animate-pulse" : ""}`} />
-                  {listening ? "Listening…" : "Voice"}
+                  {transcribing
+                    ? "Transcribing…"
+                    : listening
+                      ? "Recording… tap to finish"
+                      : "Voice"}
                 </button>
               </div>
               <textarea

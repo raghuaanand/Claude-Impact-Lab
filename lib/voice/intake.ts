@@ -1,17 +1,12 @@
+import { languageToBcp47 } from "@/lib/voice/languages";
+
+export { languageToBcp47, REPORT_LANGUAGES } from "@/lib/voice/languages";
+export { startAudioCapture, type AudioCaptureSession } from "@/lib/voice/capture";
+
 export interface VoiceIntakeProvider {
   transcribe(audio: Blob, language: string): Promise<string>;
   translate?(text: string, from: string, to: string): Promise<string>;
 }
-
-const LANGUAGE_CODES: Record<string, string> = {
-  Hindi: "hi-IN",
-  English: "en-IN",
-  Marathi: "mr-IN",
-  Bengali: "bn-IN",
-  Tamil: "ta-IN",
-  Telugu: "te-IN",
-  Gujarati: "gu-IN",
-};
 
 type SpeechRecognitionInstance = {
   lang: string;
@@ -33,17 +28,16 @@ function getSpeechRecognitionCtor():
   return W.SpeechRecognition ?? W.webkitSpeechRecognition;
 }
 
-export function languageToBcp47(language: string): string {
-  return LANGUAGE_CODES[language] ?? "hi-IN";
-}
-
 export function voiceCaptureErrorMessage(error: string): string {
+  if (error.startsWith("sarvam-error:")) {
+    return `Transcription failed: ${error.slice("sarvam-error:".length)}`;
+  }
   switch (error) {
     case "not-allowed":
     case "permission-denied":
       return "Microphone access denied. Allow the mic in your browser settings and try again.";
     case "no-speech":
-      return "No speech detected. Tap Voice and speak your description.";
+      return "No speech detected. Tap Voice, speak clearly, then tap again to finish.";
     case "network":
       return "Voice recognition needs an internet connection.";
     case "not-secured":
@@ -53,40 +47,63 @@ export function voiceCaptureErrorMessage(error: string): string {
       return "";
     case "audio-capture":
       return "No microphone found. Connect a mic and try again.";
+    case "sarvam-not-configured":
+      return "Voice service is not configured. Add SARVAM_API_KEY to the server environment.";
+    case "sarvam-forbidden":
+      return "Invalid Sarvam API key. Check SARVAM_API_KEY on the server.";
+    case "sarvam-quota":
+      return "Sarvam API quota exceeded. Check your Sarvam dashboard credits.";
+    case "transcription-failed":
+    case "no-audio":
+      return "Could not transcribe voice. Try again.";
+    case "audio-too-large":
+      return "Recording is too long. Speak for under 30 seconds.";
+    case "recording-too-short":
+      return "Recording too short. Speak for at least 2 seconds, then tap to finish.";
     default:
+      if (error.includes("audio format") || error.includes("Failed to read the file")) {
+        return "Could not read the recording. Speak for at least 2 seconds, then tap to finish.";
+      }
       return "Could not capture voice. Try again.";
   }
 }
 
-/** Request mic permission before Web Speech API (required by most browsers). */
-export async function ensureMicrophoneAccess(): Promise<void> {
+/** Send recorded audio to the server (Sarvam Saaras v3). */
+export async function transcribeAudio(audio: Blob, language: string): Promise<string> {
+  const ext = audio.type.includes("ogg") ? "ogg" : "webm";
+  const formData = new FormData();
+  formData.append("file", audio, `recording.${ext}`);
+  formData.append("language", language);
+
+  const res = await fetch("/api/voice/transcribe", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = (await res.json().catch(() => ({}))) as {
+    transcript?: string;
+    code?: string;
+    error?: string;
+  };
+
+  if (!res.ok) {
+    const detail = typeof data.error === "string" && data.error ? data.error : undefined;
+    throw new Error(data.code ?? detail ?? "transcription-failed");
+  }
+
+  const transcript = data.transcript?.trim();
+  if (!transcript) throw new Error("no-speech");
+  return transcript;
+}
+
+/** Legacy browser speech-to-text (unreliable on Chromium/Linux — prefer transcribeAudio). */
+export async function listenForSpeech(language: string): Promise<string> {
   if (typeof window === "undefined") {
     throw new Error("Web Speech API requires browser");
   }
   if (!window.isSecureContext) {
     throw new Error("not-secured");
   }
-  if (!navigator.mediaDevices?.getUserMedia) {
-    throw new Error("not-allowed");
-  }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach((track) => track.stop());
-  } catch (err) {
-    const name = err instanceof DOMException ? err.name : "";
-    if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-      throw new Error("not-allowed");
-    }
-    if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-      throw new Error("audio-capture");
-    }
-    throw err;
-  }
-}
-
-/** Browser speech-to-text via Web Speech API. */
-export async function listenForSpeech(language: string): Promise<string> {
-  await ensureMicrophoneAccess();
 
   const Ctor = getSpeechRecognitionCtor();
   if (!Ctor) {
@@ -119,6 +136,12 @@ export class WebSpeechProvider implements VoiceIntakeProvider {
   }
 }
 
+export class SarvamProvider implements VoiceIntakeProvider {
+  async transcribe(audio: Blob, language: string): Promise<string> {
+    return transcribeAudio(audio, language);
+  }
+}
+
 export class ManualProvider implements VoiceIntakeProvider {
   async transcribe(): Promise<string> {
     return "";
@@ -127,13 +150,7 @@ export class ManualProvider implements VoiceIntakeProvider {
 
 export function getVoiceProvider(): VoiceIntakeProvider {
   if (typeof window !== "undefined") {
-    const W = window as Window & {
-      SpeechRecognition?: unknown;
-      webkitSpeechRecognition?: unknown;
-    };
-    if (W.SpeechRecognition || W.webkitSpeechRecognition) {
-      return new WebSpeechProvider();
-    }
+    return new SarvamProvider();
   }
   return new ManualProvider();
 }
@@ -148,7 +165,7 @@ export function extractDescriptors(text: string): {
   const lower = text.toLowerCase();
   const clothing: string[] = [];
   const colors = ["white", "saffron", "red", "green", "blue", "black", "yellow", "orange"];
-  const garments = ["kurta", "saree", "shawl", "dhoti", "turban", "shirt"];
+  const garments = ["kurta", "saree", "shawl", "dhoti", "turban", "shirt", "mundu", "veshti"];
   for (const c of colors) {
     if (lower.includes(c)) clothing.push(c);
   }
