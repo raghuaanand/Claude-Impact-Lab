@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { CctvAlertList } from "@/components/cctv/CctvAlertList";
 import type { SafeCase } from "@/lib/case-access";
 
 export default function CaseDetailPage() {
@@ -139,6 +140,12 @@ export default function CaseDetailPage() {
             <Row label="Remarks" value={caseRecord.remarks} />
           )}
         </Card>
+
+        <CctvAlertList
+          caseId={caseRecord.id}
+          caseType={caseRecord.type}
+          canDispatch={isSupervisor}
+        />
 
         {actionMsg && (
           <p className="mt-4 text-sm text-khummela-accent">{actionMsg}</p>

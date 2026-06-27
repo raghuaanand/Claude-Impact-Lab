@@ -113,7 +113,21 @@ export function MobileAuthForm({ mode = "signin" }: MobileSignInFormProps) {
         return;
       }
 
-      router.push("/signin?registered=mobile");
+      const signInResult = await signIn("mobile-password", {
+        mobile,
+        password,
+        redirect: false,
+      });
+
+      setLoading(false);
+
+      if (signInResult?.error) {
+        router.push("/signin?registered=mobile");
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
     } catch {
       setError("Registration failed. Please try again.");
       setLoading(false);
