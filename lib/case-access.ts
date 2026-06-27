@@ -1,5 +1,6 @@
 import type { Case, CaseMedia, Role, Zone } from "@/app/generated/prisma/client";
 import { canSeePii } from "@/lib/roles";
+import { normalizeCdnUrl } from "@/lib/s3";
 
 export type CaseWithRelations = Case & {
   zone?: Zone | null;
@@ -60,7 +61,7 @@ export function redactCase(caseRecord: CaseWithRelations, role: Role): SafeCase 
     reportedAt: caseRecord.reportedAt,
     media: (caseRecord.media ?? []).map((m) => ({
       id: m.id,
-      cdnUrl: m.cdnUrl,
+      cdnUrl: normalizeCdnUrl(m.cdnUrl),
       mimeType: m.mimeType,
       kind: m.kind,
     })),

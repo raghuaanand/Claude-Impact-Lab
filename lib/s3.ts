@@ -3,7 +3,16 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const region = process.env.AWS_REGION ?? "ap-south-1";
 const bucket = process.env.S3_BUCKET_NAME ?? "";
-const cloudfrontUrl = (process.env.CLOUDFRONT_URL ?? "").replace(/\/$/, "");
+function normalizeCloudFrontBase(url: string): string {
+  const trimmed = url.replace(/\/$/, "");
+  if (!trimmed) return "";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+
+const cloudfrontUrl = normalizeCloudFrontBase(process.env.CLOUDFRONT_URL ?? "");
 
 let client: S3Client | null = null;
 
@@ -40,7 +49,17 @@ export function buildS3Key(
 }
 
 export function getCdnUrl(s3Key: string): string {
-  return `${cloudfrontUrl}/${s3Key}`;
+  return `${cloudfrontUrl}/${s3Key.replace(/^\//, "")}`;
+}
+
+/** Fix URLs saved without https:// (browsers treat them as relative paths). */
+export function normalizeCdnUrl(url: string): string {
+  if (!url) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.includes(".cloudfront.net/") || url.startsWith("cloudfront.net")) {
+    return `https://${url.replace(/^\/+/, "")}`;
+  }
+  return url;
 }
 
 export async function getPresignedUploadUrl(
