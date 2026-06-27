@@ -60,9 +60,11 @@ export default function ManagementPage() {
 
   return (
     <AppShell title="Command Center" role={role} showNav={false}>
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Command Center</h1>
-        <p className="mt-1 text-khummela-muted">Supervisor overview — all zones</p>
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <header className="space-y-1">
+          <h1 className="text-3xl font-extrabold tracking-tight text-khummela-text md:text-4xl">Command Center</h1>
+          <p className="text-sm font-semibold text-khummela-muted leading-relaxed">Supervisor overview — all mela zones</p>
+        </header>
 
         {analytics && (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -76,17 +78,19 @@ export default function ManagementPage() {
           </div>
         )}
 
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold">Match verification</h2>
-          <p className="text-sm text-khummela-muted">Human review required — no auto-reunification</p>
-          <div className="mt-6 space-y-8">
+        <section className="mt-12 border-t border-black/[0.05] pt-10">
+          <header className="space-y-1">
+            <h2 className="text-xl font-bold tracking-tight text-khummela-text">Match Verification</h2>
+            <p className="text-xs font-semibold text-khummela-muted">Human review required — no auto-reunification</p>
+          </header>
+          <div className="mt-6 space-y-10">
             {matches.length === 0 ? (
-              <Card className="text-center text-sm text-khummela-muted">
-                No pending matches
+              <Card className="text-center p-12 border border-black/[0.03] bg-white rounded-3xl text-sm font-bold text-khummela-muted/60">
+                No pending matches to verify
               </Card>
             ) : (
               matches.map((m) => (
-                <div key={m.id}>
+                <div key={m.id} className="border-b border-black/[0.04] pb-8 last:border-b-0">
                   <MatchCompare
                     score={m.score}
                     missing={{
@@ -110,7 +114,7 @@ export default function ManagementPage() {
                       imageUrl: m.foundCase.media?.[0]?.cdnUrl,
                     }}
                   />
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-5 flex gap-4 max-w-md mx-auto">
                     <Button
                       className="flex-1"
                       onClick={() => reviewMatch(m.id, "APPROVED")}
@@ -131,26 +135,26 @@ export default function ManagementPage() {
           </div>
         </section>
 
-        <section className="mt-12">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold">Missing Wall</h2>
-            <div className="flex flex-wrap gap-2">
+        <section className="mt-12 border-t border-black/[0.05] pt-10">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-bold tracking-tight text-khummela-text">Missing Wall</h2>
+            <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => setZoneFilter("")}
-                className={`rounded-full px-3 py-1 text-sm ${
-                  !zoneFilter ? "bg-khummela-primary text-white" : "bg-khummela-surface"
+                className={`rounded-full px-4 py-1.5 text-xs font-bold tracking-wide transition-all duration-200 active:scale-[0.97] ${
+                  !zoneFilter ? "bg-black text-white shadow-sm" : "bg-black/[0.04] text-khummela-muted hover:bg-black/[0.08]"
                 }`}
               >
-                All zones
+                All Zones
               </button>
               {analytics?.byZone.slice(0, 8).map((z) => (
                 <button
                   key={z.id}
                   type="button"
                   onClick={() => setZoneFilter(z.id)}
-                  className={`rounded-full px-3 py-1 text-sm ${
-                    zoneFilter === z.id ? "bg-khummela-primary text-white" : "bg-khummela-surface"
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold tracking-wide transition-all duration-200 active:scale-[0.97] ${
+                    zoneFilter === z.id ? "bg-black text-white shadow-sm" : "bg-black/[0.04] text-khummela-muted hover:bg-black/[0.08]"
                   }`}
                 >
                   {z.code} ({z.count})
@@ -158,16 +162,16 @@ export default function ManagementPage() {
               ))}
             </div>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {cases.map((c) => (
               <CaseCard key={c.id} caseRecord={c} href={`/dashboard/cases/${c.id}`} />
             ))}
           </div>
         </section>
 
-        <p className="mt-8 text-center">
-          <Link href="/dashboard" className="text-sm text-khummela-accent">
-            ← Volunteer dashboard
+        <p className="mt-12 text-center">
+          <Link href="/dashboard" className="text-sm font-bold text-khummela-primary transition-colors hover:text-khummela-primary-dark">
+            ← Back to Dashboard
           </Link>
         </p>
       </div>

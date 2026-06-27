@@ -56,7 +56,7 @@ export default function AdminPage() {
     });
     setSaving(null);
     if (res.ok) {
-      setMessage("User updated");
+      setMessage("User settings successfully updated");
       load();
     } else {
       const data = await res.json();
@@ -66,44 +66,52 @@ export default function AdminPage() {
 
   return (
     <AppShell title="Admin" role={role} showNav={false}>
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Police administration</h1>
-        <p className="mt-1 text-sm text-khummela-muted">
-          Manage roles and volunteer zone assignments
-        </p>
+      <div className="mx-auto max-w-4xl px-6 py-10">
+        <header className="space-y-1">
+          <h1 className="text-3xl font-extrabold tracking-tight text-khummela-text md:text-4xl">Police Administration</h1>
+          <p className="text-sm font-semibold text-khummela-muted leading-relaxed">
+            Manage roles and volunteer zone assignments
+          </p>
+        </header>
 
         {message && (
-          <p className="mt-4 text-sm text-khummela-success">{message}</p>
+          <div className="mt-6 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/10 px-4 py-3 text-xs font-bold text-emerald-600">
+            {message}
+          </div>
         )}
 
-        <div className="mt-6 flex gap-3">
-          <Link href="/management" className="text-sm text-khummela-accent">
-            Command center →
+        <div className="mt-6 flex items-center gap-3">
+          <Link href="/management">
+            <Button variant="outline" size="sm">
+              Command Center →
+            </Button>
           </Link>
-          <Link href="/dashboard" className="text-sm text-khummela-muted">
-            Dashboard →
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">
+              Dashboard →
+            </Button>
           </Link>
         </div>
 
         <div className="mt-8 space-y-4">
           {users.map((user) => (
-            <Card key={user.id} className="p-4">
+            <Card key={user.id} className="p-5 border border-black/[0.03] bg-white">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="font-semibold text-khummela-text">
+                  <p className="font-bold text-base tracking-tight text-khummela-text">
                     {user.name || user.email || user.mobile || "User"}
                   </p>
-                  <p className="text-sm text-khummela-muted">
+                  <p className="text-xs font-semibold text-khummela-muted mt-0.5">
                     {user.email ?? user.mobile}
                   </p>
-                  <p className="mt-1 text-xs text-khummela-muted">
-                    Current: {roleLabel(user.role)}
-                    {user.zone ? ` · ${user.zone.name}` : ""}
-                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-bold text-khummela-muted/80 uppercase tracking-wide">
+                    <span>Role: {roleLabel(user.role)}</span>
+                    {user.zone && <span>· Zone: {user.zone.name} ({user.zone.code})</span>}
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <select
-                    className="h-11 rounded-lg border border-khummela-border px-3 text-sm"
+                    className="h-10 rounded-full border border-black/[0.08] bg-black/[0.03] px-4 text-xs font-bold text-khummela-text focus:bg-white focus:outline-none focus:ring-2 focus:ring-khummela-primary/20 transition-all cursor-pointer"
                     value={user.role}
                     disabled={saving === user.id}
                     onChange={(e) =>
@@ -118,7 +126,7 @@ export default function AdminPage() {
                   </select>
                   {user.role === "VOLUNTEER" && (
                     <select
-                      className="h-11 rounded-lg border border-khummela-border px-3 text-sm"
+                      className="h-10 rounded-full border border-black/[0.08] bg-black/[0.03] px-4 text-xs font-bold text-khummela-text focus:bg-white focus:outline-none focus:ring-2 focus:ring-khummela-primary/20 transition-all cursor-pointer"
                       value={user.zone?.id ?? ""}
                       disabled={saving === user.id}
                       onChange={(e) =>
@@ -142,8 +150,8 @@ export default function AdminPage() {
         </div>
 
         {users.length === 0 && (
-          <Card className="mt-8 p-8 text-center text-sm text-khummela-muted">
-            No users found
+          <Card className="mt-8 p-12 text-center border border-black/[0.03] bg-white rounded-3xl text-sm font-bold text-khummela-muted/60">
+            No users registered
           </Card>
         )}
       </div>

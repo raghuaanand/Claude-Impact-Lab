@@ -4,8 +4,8 @@ import type { Role } from "@/app/generated/prisma/client";
 
 export function RoleBadge({ role, className }: { role: Role; className?: string }) {
   const colors: Record<Role, string> = {
-    FAMILY: "bg-khummela-hope/15 text-khummela-primary",
-    VOLUNTEER: "bg-khummela-accent/10 text-khummela-accent",
+    FAMILY: "bg-khummela-hope/10 text-khummela-hope",
+    VOLUNTEER: "bg-black/[0.04] text-khummela-muted",
     SUPERVISOR: "bg-khummela-primary/10 text-khummela-primary",
     POLICE: "bg-khummela-error/10 text-khummela-error",
   };
@@ -13,7 +13,7 @@ export function RoleBadge({ role, className }: { role: Role; className?: string 
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
         colors[role],
         className
       )}

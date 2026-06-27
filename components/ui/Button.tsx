@@ -17,24 +17,24 @@ export function Button({
 }: ButtonProps) {
   const variants = {
     primary:
-      "bg-khummela-primary text-white hover:bg-khummela-primary-dark shadow-sm",
+      "bg-khummela-primary text-white hover:bg-[#007bf3] shadow-sm hover:shadow-[0_4px_16px_rgba(0,113,227,0.25)]",
     secondary:
-      "bg-khummela-accent text-white hover:bg-khummela-accent-dark shadow-sm",
+      "bg-khummela-accent text-white hover:bg-khummela-accent-dark shadow-sm hover:shadow-[0_4px_16px_rgba(29,29,31,0.25)]",
     outline:
-      "border-2 border-khummela-primary text-khummela-primary hover:bg-khummela-primary/5",
-    ghost: "text-khummela-text hover:bg-khummela-surface",
+      "border border-black/[0.12] text-khummela-text bg-white hover:bg-black/[0.02] hover:border-black/[0.18]",
+    ghost: "text-khummela-text hover:bg-black/[0.04] hover:text-black",
   };
 
   const sizes = {
-    sm: "h-9 px-3 text-sm",
-    md: "h-11 px-5 text-sm",
-    lg: "h-12 px-6 text-base",
+    sm: "h-9 px-4 text-xs font-semibold tracking-wide",
+    md: "h-11 px-5 text-sm font-semibold tracking-wide",
+    lg: "h-12 px-7 text-sm font-semibold tracking-wide",
   };
 
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-accent focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-khummela-primary/40 disabled:pointer-events-none disabled:opacity-40 active:scale-[0.97]",
         variants[variant],
         sizes[size],
         className
@@ -44,7 +44,7 @@ export function Button({
     >
       {loading && (
         <svg
-          className="h-4 w-4 animate-spin"
+          className="h-4 w-4 animate-spin text-current"
           viewBox="0 0 24 24"
           fill="none"
           aria-hidden="true"
@@ -68,3 +68,4 @@ export function Button({
     </button>
   );
 }
+

@@ -15,6 +15,8 @@ import {
   REPORT_LANGUAGES,
 } from "@/lib/voice/intake";
 import { startAudioCapture, type AudioCaptureSession } from "@/lib/voice/capture";
+import { localeToReportLanguage } from "@/lib/i18n/config";
+import { useTranslation } from "@/components/i18n/LocaleProvider";
 import { Mic } from "lucide-react";
 
 const AGE_BANDS = ["0-12", "13-17", "18-40", "41-60", "61-70", "71-80", "80+"];
@@ -29,10 +31,23 @@ type ReportWizardProps = {
 
 export function ReportWizard({ type }: ReportWizardProps) {
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const steps =
     type === "MISSING"
-      ? ["Who", "Where", "Description", "Photo", "Contact"]
-      : ["Who", "Where", "Description", "Photo", "Location"];
+      ? [
+          t("report.steps.who"),
+          t("report.steps.where"),
+          t("report.steps.description"),
+          t("report.steps.photo"),
+          t("report.steps.contact"),
+        ]
+      : [
+          t("report.steps.who"),
+          t("report.steps.where"),
+          t("report.steps.description"),
+          t("report.steps.photo"),
+          t("report.steps.location"),
+        ];
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -49,7 +64,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
     personName: "",
     ageBand: "",
     gender: "",
-    language: "Hindi",
+    language: localeToReportLanguage(locale),
     physicalDescription: "",
     lastSeenText: "",
     zoneId: "",
@@ -58,6 +73,10 @@ export function ReportWizard({ type }: ReportWizardProps) {
     state: "",
     district: "",
   });
+
+  useEffect(() => {
+    setForm((f) => ({ ...f, language: localeToReportLanguage(locale) }));
+  }, [locale]);
 
   useEffect(() => {
     fetch("/api/zones")
@@ -98,7 +117,7 @@ export function ReportWizard({ type }: ReportWizardProps) {
       const code = e instanceof Error ? e.message : "";
       const message =
         code === "Speech recognition not supported in this browser"
-          ? "Voice input not supported in this browser"
+          ? t("report.voiceNotSupported")
           : voiceCaptureErrorMessage(code);
       if (message) setError(message);
     } finally {
@@ -150,234 +169,272 @@ export function ReportWizard({ type }: ReportWizardProps) {
 
   if (doneRef) {
     return (
-      <Card className="mx-auto max-w-md text-center">
-        <p className="text-sm font-medium text-khummela-success">Report submitted</p>
-        <p className="mt-4 text-2xl font-semibold text-khummela-text">Case registered</p>
-        <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-khummela-primary">
-          {doneRef}
-        </p>
-        <p className="mt-4 text-sm leading-relaxed text-khummela-muted">
-          Show this reference to the help desk. Your report is visible across all Khoya-Paaya
-          centers.
-        </p>
-        <Button className="mt-8 w-full" size="lg" onClick={() => router.push("/")}>
-          Done
-        </Button>
-      </Card>
+      <div className="mx-auto max-w-lg px-6 py-10">
+        <Card className="p-8 border border-black/[0.03] bg-white rounded-[32px] text-center space-y-6 shadow-[0_12px_40px_rgba(0,0,0,0.04)]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 mx-auto">
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">{t("report.caseCreated")}</p>
+            <h2 className="text-2xl font-extrabold text-khummela-text mt-1">{t("report.caseCreated")}</h2>
+          </div>
+          
+          <div className="bg-black/[0.02] border border-black/[0.04] p-6 rounded-2xl">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-khummela-muted">{t("report.caseRef")}</span>
+            <span className="font-mono text-3xl font-extrabold tracking-tight text-khummela-primary block mt-1.5">{doneRef}</span>
+          </div>
+
+          <p className="text-xs font-medium leading-relaxed text-khummela-muted max-w-sm mx-auto">
+            Show this reference number to the help desk coordinators. The details are now shared across all active search kiosks.
+          </p>
+
+          <Button className="w-full mt-4" size="md" onClick={() => router.push("/")}>
+            Return to Dashboard
+          </Button>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8">
+    <div className="mx-auto max-w-lg px-6 py-10 pb-32">
+      <div className="mb-6 flex items-center justify-between">
+        <span className="text-xs font-bold uppercase tracking-wider text-khummela-muted">
+          Report {type === "MISSING" ? "Missing Case" : "Found Person"}
+        </span>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="text-xs font-bold text-rose-500 hover:opacity-85 transition-opacity"
+        >
+          Cancel
+        </button>
+      </div>
+
       <StepWizard steps={steps} currentStep={step}>
-        {step === 0 && (
-          <div className="space-y-6">
-            <div>
-              <Label>Person&apos;s name (if known)</Label>
-              <Input
-                className="mt-2 h-12"
-                value={form.personName}
-                onChange={(e) => update({ personName: e.target.value })}
-                placeholder="Optional"
-              />
-            </div>
-            <div>
-              <Label>Age range</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {AGE_BANDS.map((b) => (
-                  <button
-                    key={b}
-                    type="button"
-                    onClick={() => update({ ageBand: b })}
-                    className={`h-12 min-w-[4.5rem] rounded-xl px-3 text-sm font-medium transition-colors ${
-                      form.ageBand === b
-                        ? "bg-khummela-primary text-white"
-                        : "bg-khummela-surface text-khummela-text"
-                    }`}
-                  >
-                    {b}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label>Gender</Label>
-              <div className="mt-2 flex gap-2">
-                {GENDERS.map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => update({ gender: g })}
-                    className={`h-12 flex-1 rounded-xl text-sm font-medium ${
-                      form.gender === g
-                        ? "bg-khummela-primary text-white"
-                        : "bg-khummela-surface text-khummela-text"
-                    }`}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-4">
-            <div>
-              <Label>Zone / last seen area</Label>
-              <div className="mt-2 max-h-64 space-y-2 overflow-y-auto">
-                {zones.map((z) => (
-                  <button
-                    key={z.id}
-                    type="button"
-                    onClick={() => update({ zoneId: z.id, lastSeenText: z.name })}
-                    className={`flex w-full items-center rounded-xl px-4 py-3 text-left text-sm ${
-                      form.zoneId === z.id
-                        ? "bg-khummela-primary text-white"
-                        : "bg-white ring-1 ring-black/5"
-                    }`}
-                  >
-                    {z.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label>Last seen details</Label>
-              <Input
-                className="mt-2 h-12"
-                value={form.lastSeenText}
-                onChange={(e) => update({ lastSeenText: e.target.value })}
-                placeholder="e.g. Near Ramkund Ghat"
-              />
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-4">
-            <div>
-              <Label>Language</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {LANGUAGES.map((l) => (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => update({ language: l })}
-                    className={`rounded-full px-4 py-2 text-sm ${
-                      form.language === l
-                        ? "bg-khummela-accent text-white"
-                        : "bg-khummela-surface"
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <Label>Physical description</Label>
-                <button
-                  type="button"
-                  onClick={handleVoice}
-                  disabled={transcribing}
-                  className={`flex items-center gap-1 text-sm ${
-                    listening || transcribing ? "text-khummela-muted" : "text-khummela-accent"
-                  }`}
-                >
-                  <Mic className={`h-4 w-4 ${listening ? "animate-pulse" : ""}`} />
-                  {transcribing
-                    ? "Transcribing…"
-                    : listening
-                      ? "Recording… tap to finish"
-                      : "Voice"}
-                </button>
-              </div>
-              <textarea
-                className="mt-2 w-full rounded-xl border border-khummela-border p-4 text-base focus:border-khummela-accent focus:outline-none focus:ring-2 focus:ring-khummela-accent/20"
-                rows={4}
-                value={form.physicalDescription}
-                onChange={(e) => update({ physicalDescription: e.target.value })}
-                placeholder="Clothing, distinguishing features…"
-              />
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <PhotoUpload
-            preview={photoPreview}
-            onFileSelect={(file) => {
-              setPhotoFile(file);
-              setPhotoPreview(URL.createObjectURL(file));
-            }}
-          />
-        )}
-
-        {step === 4 && (
-          <div className="space-y-4">
-            {type === "MISSING" ? (
-              <>
-                <div>
-                  <Label>Your mobile number</Label>
-                  <Input
-                    className="mt-2 h-12"
-                    type="tel"
-                    value={form.reporterPhone}
-                    onChange={(e) => update({ reporterPhone: e.target.value })}
-                    placeholder="+91"
-                  />
-                </div>
-                <div>
-                  <Label>Reporting center</Label>
-                  <Input
-                    className="mt-2 h-12"
-                    value={form.reportingCenter}
-                    onChange={(e) => update({ reportingCenter: e.target.value })}
-                    placeholder="Khoya-Paaya Kendra name"
-                  />
-                </div>
-              </>
-            ) : (
+        <div className="mt-8 bg-white border border-black/[0.03] p-6 rounded-[24px] shadow-[0_6px_20px_rgba(0,0,0,0.015)]">
+          {step === 0 && (
+            <div className="space-y-5">
               <div>
-                <Label>Current location / center</Label>
+                <Label htmlFor="personName">Person&apos;s Full Name</Label>
                 <Input
-                  className="mt-2 h-12"
-                  value={form.reportingCenter}
-                  onChange={(e) => update({ reportingCenter: e.target.value })}
-                  placeholder="Where the person was found"
+                  id="personName"
+                  className="mt-2 h-11"
+                  value={form.personName}
+                  onChange={(e) => update({ personName: e.target.value })}
+                  placeholder="Leave blank if unknown"
                 />
               </div>
-            )}
-          </div>
-        )}
+              <div>
+                <Label>Age Bracket</Label>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {AGE_BANDS.map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => update({ ageBand: b })}
+                      className={`h-10 rounded-full px-4 text-xs font-bold tracking-wide transition-all duration-200 active:scale-[0.97] border ${
+                        form.ageBand === b
+                          ? "bg-khummela-primary border-transparent text-white shadow-sm shadow-khummela-primary/10"
+                          : "bg-black/[0.03] border-black/[0.05] text-khummela-text hover:bg-black/[0.06]"
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label>Gender</Label>
+                <div className="mt-2.5 flex gap-2">
+                  {GENDERS.map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => update({ gender: g })}
+                      className={`h-10 flex-1 rounded-full text-xs font-bold tracking-wide transition-all duration-200 active:scale-[0.97] border ${
+                        form.gender === g
+                          ? "bg-khummela-primary border-transparent text-white shadow-sm shadow-khummela-primary/10"
+                          : "bg-black/[0.03] border-black/[0.05] text-khummela-text hover:bg-black/[0.06]"
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
-        {error && (
-          <p className="mt-4 text-sm text-khummela-error">{error}</p>
-        )}
+          {step === 1 && (
+            <div className="space-y-5">
+              <div>
+                <Label>Assigned Arena / Zone</Label>
+                <div className="mt-2 max-h-56 space-y-1.5 overflow-y-auto pr-1 border border-black/[0.05] rounded-xl p-2 bg-black/[0.01]">
+                  {zones.map((z) => (
+                    <button
+                      key={z.id}
+                      type="button"
+                      onClick={() => update({ zoneId: z.id, lastSeenText: z.name })}
+                      className={`flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-xs font-bold transition-all duration-200 ${
+                        form.zoneId === z.id
+                          ? "bg-khummela-primary text-white"
+                          : "bg-white border border-black/[0.04] text-khummela-text hover:bg-black/[0.02]"
+                      }`}
+                    >
+                      <span>{z.name}</span>
+                      <span className="opacity-60">{z.code}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="lastSeenText">Last Seen Specifics</Label>
+                <Input
+                  id="lastSeenText"
+                  className="mt-2 h-11"
+                  value={form.lastSeenText}
+                  onChange={(e) => update({ lastSeenText: e.target.value })}
+                  placeholder="e.g. Near Ramkund Ghat / Food Stalls"
+                />
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-5">
+              <div>
+                <Label>Primary Speaking Language</Label>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => update({ language: l })}
+                      className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
+                        form.language === l
+                          ? "bg-black text-white"
+                          : "bg-black/[0.03] text-khummela-muted hover:bg-black/[0.06]"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description">Physical Description</Label>
+                  <button
+                    type="button"
+                    onClick={handleVoice}
+                    disabled={transcribing}
+                    className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-opacity hover:opacity-80 ${
+                      listening || transcribing ? "text-khummela-primary" : "text-khummela-primary"
+                    }`}
+                  >
+                    <Mic className={`h-3.5 w-3.5 ${listening ? "animate-bounce text-rose-500" : ""}`} />
+                    {transcribing
+                      ? t("report.voiceTranscribing")
+                      : listening
+                        ? t("report.voiceListening")
+                        : t("report.voiceHint")}
+                  </button>
+                </div>
+                <textarea
+                  id="description"
+                  className="mt-2 w-full rounded-xl border border-black/[0.08] p-4 text-xs font-semibold placeholder:text-khummela-muted/70 transition-all duration-200 focus:border-khummela-primary focus:outline-none focus:ring-4 focus:ring-khummela-primary/10"
+                  rows={4}
+                  value={form.physicalDescription}
+                  onChange={(e) => update({ physicalDescription: e.target.value })}
+                  placeholder="Describe clothing, height, visible features..."
+                />
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="p-2">
+              <PhotoUpload
+                preview={photoPreview}
+                onFileSelect={(file) => {
+                  setPhotoFile(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                }}
+              />
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-5">
+              {type === "MISSING" ? (
+                <>
+                  <div>
+                    <Label htmlFor="reporterPhone">Reporter Mobile Number</Label>
+                    <Input
+                      id="reporterPhone"
+                      className="mt-2 h-11"
+                      type="tel"
+                      value={form.reporterPhone}
+                      onChange={(e) => update({ reporterPhone: e.target.value })}
+                      placeholder="+91 XXXXX XXXXX"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="reportingCenter">Kiosk / Help Desk Name</Label>
+                    <Input
+                      id="reportingCenter"
+                      className="mt-2 h-11"
+                      value={form.reportingCenter}
+                      onChange={(e) => update({ reportingCenter: e.target.value })}
+                      placeholder="e.g. Center Gate 3"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Label htmlFor="reportingCenter">Current Safe Location</Label>
+                  <Input
+                    id="reportingCenter"
+                    className="mt-2 h-11"
+                    value={form.reportingCenter}
+                    onChange={(e) => update({ reportingCenter: e.target.value })}
+                    placeholder="Where the person is safely waiting"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 rounded-xl bg-rose-500/[0.08] border border-rose-500/10 px-4 py-2.5 text-xs font-bold text-rose-600">
+              {error}
+            </div>
+          )}
+        </div>
       </StepWizard>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-khummela-border bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto flex max-w-md gap-3">
+      <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-full border border-black/[0.05] bg-white/80 p-2 shadow-[0_12px_36px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+        <div className="flex gap-2">
           {step > 0 && (
-            <Button variant="outline" className="flex-1" size="lg" onClick={() => setStep(step - 1)}>
-              Back
+            <Button variant="outline" className="flex-1" size="sm" onClick={() => setStep(step - 1)}>
+              {t("common.back")}
             </Button>
           )}
           {step < steps.length - 1 ? (
             <Button
               className="flex-1"
-              size="lg"
+              size="sm"
               disabled={step === 0 && (!form.ageBand || !form.gender)}
               onClick={() => setStep(step + 1)}
             >
-              Continue
+              {t("common.next")}
             </Button>
           ) : (
-            <Button className="flex-1" size="lg" loading={loading} onClick={submit}>
-              Submit report
+            <Button className="flex-1" size="sm" loading={loading} onClick={submit}>
+              {t("report.submitReport")}
             </Button>
           )}
         </div>

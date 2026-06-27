@@ -6,7 +6,7 @@ export function Label({ className, children, ...props }: LabelProps) {
   return (
     <label
       className={cn(
-        "mb-1.5 block text-sm font-medium text-khummela-text",
+        "mb-2 block text-[10px] font-bold uppercase tracking-wider text-khummela-muted/90",
         className
       )}
       {...props}
@@ -15,3 +15,4 @@ export function Label({ className, children, ...props }: LabelProps) {
     </label>
   );
 }
+
